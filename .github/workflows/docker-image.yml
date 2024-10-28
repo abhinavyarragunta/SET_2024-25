@@ -1,4 +1,4 @@
-name: Build and Push Docker Image (Linux)
+name: Build and Push Docker Image (Jetson Nano)
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile.linux  # Specify Linux Dockerfile
+          file: ./Dockerfile  # Specify Linux Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/SET2024-25:latest-linux
+          tags: ${{ secrets.DOCKER_USERNAME }}/set:latest
           platforms: linux/amd64
