@@ -51,9 +51,7 @@ while True:
 
         for box, keypoint_set, class_id in zip(boxes, keypoints, class_ids):
             # Ensure keypoints have the necessary indices
-            print("Compartmentalize features")
             if len(keypoint_set) > 16:  # Check that we have at least 17 keypoints
-                print("Keypoints detected")
                 x1, y1, x2, y2 = box
                 nose_y = keypoint_set[0][1]
                 left_ankle_y = keypoint_set[15][1]
@@ -61,14 +59,12 @@ while True:
                 avg_ankle_y = (left_ankle_y + right_ankle_y) / 2
                 print(nose_y, avg_ankle_y)
 
-                #nose_y = 150
-                #avg_ankle_y = 150
                 if abs(nose_y - avg_ankle_y) <= 200:
                     # Mark as fall
                     print("Fallen")
                     cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
                     cvzone.putTextRect(frame, f'{class_id}', (x2, y2), 1, 1)
-                    cvzone.putTextRect(frame, "Fall", (int(x2/2), int(y2/2)), 1, 1)
+                    cvzone.putTextRect(frame, "Injured", (int(x2/2), int(y2/2)), 1, 1)
                 else:
                     # Mark as normal
                     print("Not fallen")
