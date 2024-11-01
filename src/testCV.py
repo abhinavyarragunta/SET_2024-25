@@ -7,7 +7,7 @@ model = YOLO('../../../yolo11x-pose (1).pt')  # Replace with the actual pose est
 
 # Open a connection to the webcam (0 is typically the default camera)
 cap = cv2.VideoCapture(0)
-
+# "
 # Check if the webcam is opened correctly
 if not cap.isOpened():
     print("Error: Could not open webcam.")
