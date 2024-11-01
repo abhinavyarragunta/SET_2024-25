@@ -1,0 +1,6 @@
+# dependencies / env folders
+.venv
+.DS_Store
+.node_modules
+
+__pycache__
