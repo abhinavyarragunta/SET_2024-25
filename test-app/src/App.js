@@ -1,35 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useRef } from 'react';
+import io from 'socket.io-client';
 
 function App() {
-  const [ipAddress, setIpAddress] = useState('');
-  const flaskServerUrl = "http://127.0.0.1:8000";
+    const socket = useRef(null);
+    const audioContextRef = useRef(null);
 
-  useEffect(() => {
-    fetch(`${flaskServerUrl}/get-ip`)
-      .then(response => response.json())
-      .then(data => setIpAddress(data.ip))
-      .catch(error => console.error("Error fetching IP:", error));
-  }, []);
+    useEffect(() => {
+        // Initialize WebSocket connection
+        socket.current = io('http://127.0.0.1:8000');
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <div className="video-feed">
-          <h2>Live Video Feed</h2>
-          <img
-          src={`${flaskServerUrl}/stream`}
-          alt="Live Video Feed"
-          onError={(e) => console.error("Error loading video feed:", e)}
-          onLoad={() => console.log("Video feed loaded successfully")}
-          crossOrigin="anonymous"
-          style={{ width: '80%', border: '2px solid #333' }}
-          />
+        // Initialize AudioContext
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Listen for audio data from server
+        socket.current.on('audio_data', (data) => {
+            console.log("Received audio data:", data);  // Log to check if audio data is received
+            const floatData = Float32Array.from(data);
+            const audioBuffer = audioContextRef.current.createBuffer(1, floatData.length, 44100);
+            audioBuffer.getChannelData(0).set(floatData);
+
+            // Play the audio data
+            const source = audioContextRef.current.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContextRef.current.destination);
+            source.start();
+        });
+
+        return () => {
+            // Cleanup on component unmount
+            if (socket.current) socket.current.disconnect();
+            if (audioContextRef.current) audioContextRef.current.close();
+        };
+    }, []);
+
+    const playTestTone = () => {
+      const oscillator = audioContextRef.current.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(440, audioContextRef.current.currentTime); // A4 note
+      oscillator.connect(audioContextRef.current.destination);
+      oscillator.start();
+      oscillator.stop(audioContextRef.current.currentTime + 1); // Play for 1 second
+  };
+
+    return (
+        <div>
+            <h1>Video Stream</h1>
+            <img
+                src="http://127.0.0.1:8000/stream"
+                alt="Video Stream"
+                style={{ width: '100%', maxWidth: '600px', height: 'auto' }}
+            />
+            <button onClick={playTestTone}>Play Test Tone</button>
+            <p>Check the console to verify if audio data is being received.</p>
         </div>
-      </header>
-    </div>
-  );
+    );
 }
 
 export default App;

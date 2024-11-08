@@ -1,63 +1,60 @@
 from flask import Flask, Response
 from flask_cors import CORS
-import socket
+from flask_socketio import SocketIO
 import cv2
+import sounddevice as sd
+import numpy as np
 import threading
+
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# initialize a lock used to ensure thread-safe
-# exchanges of the frames (useful for multiple browsers/tabs
-# are viewing tthe stream)
+# Video and audio parameters
+SAMPLE_RATE = 44100  # Audio sample rate in Hz
+CHUNK_SIZE = 1024  # Audio chunk size
 lock = threading.Lock()
-hostname = socket.gethostname()
-ipv4_address = socket.gethostbyname(hostname)
 
-@app.route('/stream',methods = ['GET'])
+def capture_audio():
+    """Capture audio in real-time and send to the client."""
+    def audio_callback(indata, frames, time, status):
+        if status:
+            print(status)
+        # Send audio data to React client
+        socketio.emit('audio_data', indata.tolist())
+
+    # Start audio stream
+    with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, callback=audio_callback, blocksize=CHUNK_SIZE):
+        threading.Event().wait()  # Keep thread running
+
+@app.route('/stream', methods=['GET'])
 def stream():
-   return Response(generate(), mimetype = "multipart/x-mixed-replace; boundary=frame")
+    """Stream video frames to the client."""
+    return Response(generate_video(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
-@app.route('/get-ip', methods=['GET'])
-def get_ip():
-    return {'ip': ipv4_address}  # Replace '127.0.0.1' with the dynamic IP if needed.
+def generate_video():
+    """Generate video frames for streaming."""
+    vc = cv2.VideoCapture(0)
+    if not vc.isOpened():
+        return
 
-def generate():
-   # grab global references to the lock variable
-   global lock
-   # initialize the video stream
-   vc = cv2.VideoCapture(0)
-   
-   # check camera is open
-   if vc.isOpened():
-      rval, frame = vc.read()
-   else:
-      rval = False
+    while True:
+        rval, frame = vc.read()
+        if not rval:
+            break
+        with lock:
+            _, encoded_image = cv2.imencode(".jpg", frame)
+            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encoded_image) + b'\r\n')
+    vc.release()
 
-   # while streaming
-   while rval:
-      # wait until the lock is acquired
-      with lock:
-         # read next frame
-         rval, frame = vc.read()
-         # if blank frame
-         if frame is None:
-            continue
-
-         # encode the frame in JPEG format
-         (flag, encodedImage) = cv2.imencode(".jpg", frame)
-
-         # ensure the frame was successfully encoded
-         if not flag:
-            continue
-
-      # yield the output frame in the byte format
-      yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encodedImage) + b'\r\n')
-   # release the camera
-   vc.release()
+@socketio.on('audio_data_from_client')
+def handle_audio_data_from_client(data):
+    """Receive audio data from the client."""
+    print("Received audio data from client:", data)
+    # Process or save the incoming audio data as needed
 
 if __name__ == '__main__':
-   host = "127.0.0.1"
-   port = 8000
-   debug = False
-   options = None
-   app.run(host, port, debug, options, threaded=True)
+    # Start audio capture in a separate thread
+    threading.Thread(target=capture_audio).start()
+    # Run the Flask-SocketIO app
+    socketio.run(app, host="127.0.0.1", port=8000, debug=False, use_reloader=False)
