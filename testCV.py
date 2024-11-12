@@ -61,7 +61,7 @@ class FallDetector:
         fall_frames (int): Counter for consecutive fall frames.
     """
 
-    def __init__(self, fall_threshold_ratio=0.6, angle_threshold=70, consecutive_frames=2):
+    def __init__(self, fall_threshold_ratio=0.6, angle_threshold=70, consecutive_frames=1):
         """
         Initializes the FallDetector with specified parameters.
 
@@ -74,6 +74,24 @@ class FallDetector:
         self.angle_threshold = angle_threshold
         self.consecutive_frames = consecutive_frames
         self.fall_frames = 0
+        self.torso_angles = []
+        self.torso_positions = []
+        self.history_length = 5  # Number of frames to keep in history
+
+    def update_torso_history(self, angle, position):
+        """
+        Updates the torso history buffers.
+
+        Args:
+            angle (float): Torso angle.
+            position (float): Torso Y-position.
+        """
+        self.torso_angles.append(angle)
+        self.torso_positions.append(position)
+
+        if len(self.torso_angles) > self.history_length:
+            self.torso_angles.pop(0)
+            self.torso_positions.pop(0)
 
     def is_fallen(self, keypoints, keypoint_scores):
         """
@@ -89,26 +107,36 @@ class FallDetector:
         try:
             # Required keypoints with minimum confidence
             required_keypoints = {
-                0: 0.5,   # Nose
-                5: 0.5,   # Left Shoulder
-                6: 0.5,   # Right Shoulder
-                11: 0.5,  # Left Hip
-                12: 0.5,  # Right Hip
-                15: 0.5,  # Left Ankle
-                16: 0.5   # Right Ankle
+                0: 0.1,   # Nose
+                5: 0.1,   # Left Shoulder
+                6: 0.1,   # Right Shoulder
+                11: 0.1,  # Left Hip
+                12: 0.1,  # Right Hip
+                15: 0.1,  # Left Ankle
+                16: 0.1   # Right Ankle
             }
 
-            # Check keypoint confidences
+            # Check keypoint confidences and existence
             for idx, min_conf in required_keypoints.items():
-                if keypoint_scores[idx] < min_conf:
-                    logging.info(f"Low confidence for keypoint {idx}")
+                if idx >= len(keypoint_scores) or keypoint_scores[idx] < min_conf:
+                    logging.info(f"Low confidence or missing keypoint {idx}")
                     return False
 
             # Keypoints positions
             nose_y = keypoints[0][1]
-            left_ankle_y = keypoints[15][1]
-            right_ankle_y = keypoints[16][1]
-            avg_ankle_y = (left_ankle_y + right_ankle_y) / 2
+
+            # Use available ankle keypoints
+            ankle_ys = []
+            if keypoint_scores[15] >= required_keypoints[15]:
+                ankle_ys.append(keypoints[15][1])
+            if keypoint_scores[16] >= required_keypoints[16]:
+                ankle_ys.append(keypoints[16][1])
+
+            if not ankle_ys:
+                logging.info("No ankle keypoints available")
+                return False
+
+            avg_ankle_y = np.mean(ankle_ys)
 
             height = abs(nose_y - avg_ankle_y)
             threshold = self.fall_threshold_ratio * height
@@ -116,14 +144,25 @@ class FallDetector:
             # Check if nose is near ankle level
             nose_near_ankles = abs(nose_y - avg_ankle_y) < threshold
 
-            # Torso angle calculation
-            left_shoulder = keypoints[5]
-            right_shoulder = keypoints[6]
-            left_hip = keypoints[11]
-            right_hip = keypoints[12]
+            # Torso angle calculation using available keypoints
+            shoulders = []
+            if keypoint_scores[5] >= required_keypoints[5]:
+                shoulders.append(keypoints[5])
+            if keypoint_scores[6] >= required_keypoints[6]:
+                shoulders.append(keypoints[6])
 
-            shoulder_midpoint = np.mean([left_shoulder, right_shoulder], axis=0)
-            hip_midpoint = np.mean([left_hip, right_hip], axis=0)
+            hips = []
+            if keypoint_scores[11] >= required_keypoints[11]:
+                hips.append(keypoints[11])
+            if keypoint_scores[12] >= required_keypoints[12]:
+                hips.append(keypoints[12])
+
+            if len(shoulders) < 1 or len(hips) < 1:
+                logging.info("Not enough keypoints for torso angle calculation")
+                return False
+
+            shoulder_midpoint = np.mean(shoulders, axis=0)
+            hip_midpoint = np.mean(hips, axis=0)
 
             delta_x = hip_midpoint[0] - shoulder_midpoint[0]
             delta_y = hip_midpoint[1] - shoulder_midpoint[1]
@@ -139,16 +178,66 @@ class FallDetector:
             logging.debug(f"Nose near ankles: {nose_near_ankles}")
             logging.debug(f"Torso near horizontal: {torso_near_horizontal}")
 
-            # Determine fall
-            if nose_near_ankles or torso_near_horizontal:
+            # Update torso history
+            self.update_torso_history(angle, hip_midpoint[1])
+
+            if len(self.torso_angles) < self.history_length:
+                # Not enough data yet
+                return False
+
+            # Compute the change in angle and position
+            angle_change = self.torso_angles[-1] - self.torso_angles[0]
+            position_change = self.torso_positions[-1] - self.torso_positions[0]
+
+            fall_detected = (nose_near_ankles or torso_near_horizontal) and angle_change > 20 and position_change > 30
+
+            if fall_detected:
                 self.fall_frames += 1
             else:
                 self.fall_frames = 0
 
             return self.fall_frames >= self.consecutive_frames
 
-        except IndexError as e:
-            logging.warning(f"Keypoints missing for fall detection: {e}")
+        except Exception as e:
+            logging.warning(f"Error in fall detection: {e}")
+            return False
+
+    def is_sitting(self, keypoints, keypoint_scores, frame_height):
+        """
+        Determines if a person is sitting on the ground or against a wall.
+
+        Args:
+            keypoints (list): List of keypoint coordinates.
+            keypoint_scores (list): List of keypoint confidence scores.
+            frame_height (int): Height of the video frame.
+
+        Returns:
+            bool: True if sitting is detected, False otherwise.
+        """
+        try:
+            required_keypoints = {11: 0.1, 12: 0.1}  # Left and Right Hips
+            hips = []
+            for idx, min_conf in required_keypoints.items():
+                if idx < len(keypoint_scores) and keypoint_scores[idx] >= min_conf:
+                    hips.append(keypoints[idx][1])
+                else:
+                    logging.info(f"Low confidence or missing keypoint {idx}")
+
+            if not hips:
+                return False
+
+            avg_hip_y = np.mean(hips)
+
+            # If hips are near the bottom of the frame, person might be sitting
+            sitting_threshold = frame_height * 0.8  # Adjust as needed
+
+            sitting_detected = avg_hip_y > sitting_threshold
+
+            logging.debug(f"Sitting detected: {sitting_detected}")
+            return sitting_detected
+
+        except Exception as e:
+            logging.warning(f"Error in sitting detection: {e}")
             return False
 
 
@@ -178,6 +267,24 @@ class InjuryAnalyzer:
         self.red_difference_threshold = red_difference_threshold
         self.curl_up_distance_threshold = curl_up_distance_threshold
         self.limping_ankle_diff_threshold = limping_ankle_diff_threshold
+        self.left_ankle_history = []
+        self.right_ankle_history = []
+        self.history_length = 5  # Number of frames to keep in history
+
+    def update_ankle_history(self, left_ankle_y, right_ankle_y):
+        """
+        Updates the ankle history buffers.
+
+        Args:
+            left_ankle_y (float): Y-position of the left ankle.
+            right_ankle_y (float): Y-position of the right ankle.
+        """
+        self.left_ankle_history.append(left_ankle_y)
+        self.right_ankle_history.append(right_ankle_y)
+
+        if len(self.left_ankle_history) > self.history_length:
+            self.left_ankle_history.pop(0)
+            self.right_ankle_history.pop(0)
 
     def detect_injury_color(self, frame, x1, y1, x2, y2):
         """
@@ -227,21 +334,44 @@ class InjuryAnalyzer:
             bool: True if limping is detected, False otherwise.
         """
         try:
-            required_keypoints = {15: 0.5, 16: 0.5}  # Left and Right Ankles
+            required_keypoints = {15: 0.1, 16: 0.1}  # Left and Right Ankles
+            available_ankles = []
             for idx, min_conf in required_keypoints.items():
-                if keypoint_scores[idx] < min_conf:
-                    logging.info(f"Low confidence for keypoint {idx}")
-                    return False
+                if idx < len(keypoint_scores) and keypoint_scores[idx] >= min_conf:
+                    available_ankles.append(keypoints[idx][1])
+                else:
+                    logging.info(f"Low confidence or missing keypoint {idx}")
+
+            if len(available_ankles) < 2:
+                logging.info("Not enough ankle keypoints for limping detection")
+                return False
 
             left_ankle_y = keypoints[15][1]
             right_ankle_y = keypoints[16][1]
-            limping_detected = abs(left_ankle_y - right_ankle_y) > self.limping_ankle_diff_threshold
+
+            self.update_ankle_history(left_ankle_y, right_ankle_y)
+
+            if len(self.left_ankle_history) < self.history_length:
+                # Not enough data yet
+                return False
+
+            # Compute the differences in ankle positions
+            left_diffs = np.diff(self.left_ankle_history)
+            right_diffs = np.diff(self.right_ankle_history)
+
+            # Calculate the standard deviation of the differences
+            left_std = np.std(left_diffs)
+            right_std = np.std(right_diffs)
+
+            std_ratio = max(left_std, right_std) / (min(left_std, right_std) + 1e-5)
+
+            limping_detected = std_ratio > 1.5
 
             logging.debug(f"Limping detected: {limping_detected}")
             return limping_detected
 
-        except IndexError as e:
-            logging.warning(f"Keypoints missing for limping detection: {e}")
+        except Exception as e:
+            logging.warning(f"Error in limping detection: {e}")
             return False
 
     def is_curled_up(self, keypoints, keypoint_scores):
@@ -257,33 +387,43 @@ class InjuryAnalyzer:
         """
         try:
             required_keypoints = {
-                7: 0.5,   # Left Elbow
-                8: 0.5,   # Right Elbow
-                13: 0.5,  # Left Knee
-                14: 0.5,  # Right Knee
-                11: 0.5,  # Left Hip
-                12: 0.5   # Right Hip
+                7: 0.1,   # Left Elbow
+                8: 0.1,   # Right Elbow
+                13: 0.1,  # Left Knee
+                14: 0.1,  # Right Knee
+                11: 0.1,  # Left Hip
+                12: 0.1   # Right Hip
             }
-            for idx, min_conf in required_keypoints.items():
-                if keypoint_scores[idx] < min_conf:
-                    logging.info(f"Low confidence for keypoint {idx}")
-                    return False
+            available_elbows = []
+            available_knees = []
+            hips = []
 
-            left_elbow = np.array(keypoints[7])
-            right_elbow = np.array(keypoints[8])
-            left_knee = np.array(keypoints[13])
-            right_knee = np.array(keypoints[14])
-            hip_center = np.mean([keypoints[11], keypoints[12]], axis=0)
+            for idx, min_conf in required_keypoints.items():
+                if idx < len(keypoint_scores) and keypoint_scores[idx] >= min_conf:
+                    if idx in [7, 8]:
+                        available_elbows.append(np.array(keypoints[idx]))
+                    elif idx in [13, 14]:
+                        available_knees.append(np.array(keypoints[idx]))
+                    elif idx in [11, 12]:
+                        hips.append(np.array(keypoints[idx]))
+                else:
+                    logging.info(f"Low confidence or missing keypoint {idx}")
+
+            if len(hips) < 1:
+                logging.info("Not enough hip keypoints for curled-up detection")
+                return False
+
+            hip_center = np.mean(hips, axis=0)
 
             # Adjusted thresholds for detection
-            elbows_near_hips = (
-                np.linalg.norm(left_elbow - hip_center) < self.curl_up_distance_threshold and
-                np.linalg.norm(right_elbow - hip_center) < self.curl_up_distance_threshold
+            elbows_near_hips = all(
+                np.linalg.norm(elbow - hip_center) < self.curl_up_distance_threshold
+                for elbow in available_elbows
             )
 
-            knees_near_hips = (
-                np.linalg.norm(left_knee - hip_center) < self.curl_up_distance_threshold and
-                np.linalg.norm(right_knee - hip_center) < self.curl_up_distance_threshold
+            knees_near_hips = all(
+                np.linalg.norm(knee - hip_center) < self.curl_up_distance_threshold
+                for knee in available_knees
             )
 
             curled_up_detected = elbows_near_hips and knees_near_hips
@@ -291,8 +431,8 @@ class InjuryAnalyzer:
             logging.debug(f"Curled up detected: {curled_up_detected}")
             return curled_up_detected
 
-        except IndexError as e:
-            logging.warning(f"Keypoints missing for curled-up detection: {e}")
+        except Exception as e:
+            logging.warning(f"Error in curled-up detection: {e}")
             return False
 
 
@@ -356,13 +496,25 @@ class FallDetectionSystem:
 
         if boxes is None:
             logging.info("No detections available.")
+            # Reset histories
+            self.fall_detector.torso_angles.clear()
+            self.fall_detector.torso_positions.clear()
+            self.injury_analyzer.left_ankle_history.clear()
+            self.injury_analyzer.right_ankle_history.clear()
             return frame
+
+        frame_height, frame_width = frame.shape[:2]
 
         for box, keypoints, keypoint_scores, class_id in zip(boxes, keypoints_list, keypoint_scores_list, class_ids):
             if len(keypoints) > 16:
                 # Fall Detection
                 fall_detected = self.fall_detector.is_fallen(keypoints, keypoint_scores)
-                fall_status = "Fallen" if fall_detected else "Normal"
+                sitting_detected = self.fall_detector.is_sitting(keypoints, keypoint_scores, frame_height)
+
+                if fall_detected or sitting_detected:
+                    fall_status = "Fallen"
+                else:
+                    fall_status = "Normal"
 
                 # Injury Detection
                 injured = False
@@ -401,7 +553,7 @@ def main():
     Main function to run the Fall Detection System.
     """
     # Update the path to your model
-    model_path = '../src/yolo11x-pose (1).pt'
+    model_path = 'yolo11x-pose (1).pt'
     fall_system = FallDetectionSystem(model_path)
 
     cap = cv2.VideoCapture(0)
@@ -429,5 +581,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
