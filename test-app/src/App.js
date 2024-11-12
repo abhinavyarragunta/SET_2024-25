@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import DirectionButtons from './DirectionButtons';
+
+
 
 function App() {
   const [ipAddress, setIpAddress] = useState('');
@@ -15,9 +18,11 @@ function App() {
 
   return (
     <div className="App">
+      {/*App header contains default react app CSS */}
       <header className="App-header">
+        <h2>Live Video Feed</h2>
+
         <div className="video-feed">
-          <h2>Live Video Feed</h2>
           <img
           src={`${flaskServerUrl}/stream`}
           alt="Live Video Feed"
@@ -27,6 +32,10 @@ function App() {
           style={{ width: '80%', border: '2px solid #333' }}
           />
         </div>
+
+        <DirectionButtons></DirectionButtons>
+
+        
       </header>
     </div>
   );

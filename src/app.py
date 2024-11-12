@@ -1,14 +1,15 @@
-from flask import Flask, Response
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 import socket
 import cv2
 import threading
+import time
 app = Flask(__name__)
 CORS(app)
 
 # initialize a lock used to ensure thread-safe
 # exchanges of the frames (useful for multiple browsers/tabs
-# are viewing tthe stream)
+# are viewing tthe astream)
 lock = threading.Lock()
 hostname = socket.gethostname()
 ipv4_address = socket.gethostbyname(hostname)
@@ -20,6 +21,43 @@ def stream():
 @app.route('/get-ip', methods=['GET'])
 def get_ip():
     return {'ip': ipv4_address}  # Replace '127.0.0.1' with the dynamic IP if needed.
+
+#NEW CHANGES
+
+current_direction = None
+
+def continuous_movement():
+    while True:
+        if current_direction:
+            print(f"Moving {current_direction}...")
+            # Send movement command to the robot here for `current_direction`
+            # Example: robot.move(current_direction)
+        time.sleep(0.1)  # Adjust interval for smooth movement
+
+# Start the continuous movement loop in a separate thread
+movement_thread = threading.Thread(target=continuous_movement)
+movement_thread.daemon = True
+movement_thread.start()
+
+@app.route('/direction', methods=['POST'])
+def direction():
+    global current_direction
+    data = request.json
+    direction = data.get("direction")
+    state = data.get("state")
+
+    # Ensure only one direction is active at a time
+    if state == "move":
+        if current_direction != direction:
+            current_direction = direction  # Set new direction
+            print(f"Start moving {direction}")
+    elif state == "stop" and current_direction == direction:
+        current_direction = None
+        print(f"Stop moving {direction}")
+
+    return jsonify({"status": "success", "direction": direction, "state": state})
+
+# End of new changesa
 
 def generate():
    # grab global references to the lock variable
