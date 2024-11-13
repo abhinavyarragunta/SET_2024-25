@@ -3,7 +3,6 @@ import cvzone
 import numpy as np
 import math
 import logging
-
 import torch
 from ultralytics import YOLO
 
