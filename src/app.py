@@ -20,7 +20,9 @@ def stream():
 
 @app.route('/get-ip', methods=['GET'])
 def get_ip():
-    return {'ip': ipv4_address}  # Replace '127.0.0.1' with the dynamic IP if needed.
+    ipv4_address = socket.gethostbyname(socket.gethostname())
+    local_network_ip = socket.gethostbyname(socket.getfqdn())
+    return {'ip': ipv4_address, 'local_network_ip' : local_network_ip}  # Replace '127.0.0.1' with the dynamic IP if needed.
 
 #NEW CHANGES
 
