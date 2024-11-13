@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY src/*.py /app/
 
-CMD ["python", "robot.py"]
+CMD ["python", "app.py"]
