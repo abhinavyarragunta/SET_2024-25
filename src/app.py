@@ -57,4 +57,4 @@ if __name__ == '__main__':
     # Start audio capture in a separate thread
     threading.Thread(target=capture_audio).start()
     # Run the Flask-SocketIO app
-    socketio.run(app, host="127.0.0.1", port=8000, debug=False, use_reloader=False)
+    socketio.run(app, host="0.0.0.0", port=8000, debug=False, use_reloader=False)
