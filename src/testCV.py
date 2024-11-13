@@ -9,6 +9,7 @@ from ultralytics import YOLO
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+
 class PoseEstimator:
     """
     Estimates human poses using a YOLO model and returns detection results.
