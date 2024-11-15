@@ -5,6 +5,7 @@ import cv2
 import sounddevice as sd
 import numpy as np
 import threading
+from vision import FallDetectionSystem
 
 app = Flask(__name__)
 CORS(app)
@@ -34,16 +35,21 @@ def stream():
 
 def generate_video():
     """Generate video frames for streaming."""
+    model_path = 'yolo11x-pose.pt'
+    fall_system = FallDetectionSystem(model_path)
     vc = cv2.VideoCapture(0)
     if not vc.isOpened():
         return
 
     while True:
         rval, frame = vc.read()
+        # If frame capture was unsuccessful, break the loop
         if not rval:
             break
+        # Run pose estimation on the captured frame
+        processed_frame = fall_system.process_frame(frame)
         with lock:
-            _, encoded_image = cv2.imencode(".jpg", frame)
+            _, encoded_image = cv2.imencode(".jpg", processed_frame)
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encoded_image) + b'\r\n')
     vc.release()
 
