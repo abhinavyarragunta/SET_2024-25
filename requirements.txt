@@ -1,9 +1,1 @@
-numpy
 opencv-python
-flask
-Flask-Cors
-Flask-SocketIO
-sounddevice
-scikit-build
-cvzone
-ultralytics

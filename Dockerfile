@@ -10,4 +10,4 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libportaudio2 -y
 
 COPY src/*.py /app/
 
-CMD ["python", "app.py", "vision.py"]
+CMD ["python", "app.py"]
