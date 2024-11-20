@@ -49,7 +49,7 @@ def generate_video():
         # Run pose estimation on the captured frame
         processed_frame = fall_system.process_frame(frame)
         with lock:
-            _, encoded_image = cv2.imencode(".jpg", frame)
+            _, encoded_image = cv2.imencode(".jpg", processed_frame)
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encoded_image) + b'\r\n')
     vc.release()
 
