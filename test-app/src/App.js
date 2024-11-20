@@ -6,9 +6,11 @@ import DirectionButtons from './DirectionButtons';
 function App() {
   const socket = useRef(null);
   const audioContextRef = useRef(null);
+  const audioStreamRef = useRef(null);
   const [ipAddress, setIpAddress] = useState('');
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const flaskServerUrl = "http://127.0.0.1:8000";
 
   // Fetch the IP address from the Flask server when the component mounts
@@ -65,6 +67,36 @@ function App() {
     oscillator.stop(audioContextRef.current.currentTime + 1); // Play for 1 second
   };
 
+  // Start recording audio
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioStreamRef.current = stream;
+      setIsRecording(true);
+
+      // Send audio data to Flask via WebSocket
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = (event) => {
+        if (socket.current && event.data.size > 0) {
+          socket.current.emit('audio_stream', event.data); // Send audio to server
+        }
+      };
+      mediaRecorder.start(100); // Collect audio data in chunks (every 100ms)
+
+    } catch (error) {
+      console.error("Error accessing the microphone:", error);
+    }
+  };
+
+  // Stop recording audio
+  const stopRecording = () => {
+    if (audioStreamRef.current) {
+      const tracks = audioStreamRef.current.getTracks();
+      tracks.forEach(track => track.stop()); // Stop the tracks when done recording
+    }
+    setIsRecording(false);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -82,6 +114,11 @@ function App() {
 
         {/* Test Tone Button */}
         <button onClick={playTestTone}>Play Test Tone</button>
+
+        {/* Recording Toggle Button */}
+        <button onClick={isRecording ? stopRecording : startRecording}>
+          {isRecording ? 'Stop Audio Recording' : 'Start Audio Recording'}
+        </button>
 
         {/* Video Feed */}
         {isVideoOn && (
