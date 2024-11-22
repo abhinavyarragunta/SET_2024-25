@@ -7,30 +7,27 @@ import threading
 import time
 import sounddevice as sd
 
-
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Video and audio parameters
+# Constants for video and audio parameters
 SAMPLE_RATE = 44100  # Audio sample rate in Hz
 CHUNK_SIZE = 1024  # Audio chunk size
 lock = threading.Lock()
 
-# Robot movement control
+# Global state for robot movement
 current_direction = None
 
+# Start continuous movement in a separate thread
 def continuous_movement():
     while True:
         if current_direction:
             print(f"Moving {current_direction}...")
-            # Send movement command to the robot here for `current_direction`
-            # Example: robot.move(current_direction)
-        time.sleep(0.1)  # Adjust interval for smooth movement
+            # Send movement command to robot
+        time.sleep(0.1)
 
-# Start the continuous movement loop in a separate thread
-movement_thread = threading.Thread(target=continuous_movement)
-movement_thread.daemon = True
+movement_thread = threading.Thread(target=continuous_movement, daemon=True)
 movement_thread.start()
 
 @app.route('/stream', methods=['GET'])
@@ -40,6 +37,7 @@ def stream():
 
 @app.route('/get-ip', methods=['GET'])
 def get_ip():
+    """Return the IP addresses of the server."""
     ipv4_address = socket.gethostbyname(socket.gethostname())
     local_network_ip = socket.gethostbyname(socket.getfqdn())
     return {'ip': ipv4_address, 'local_network_ip': local_network_ip}
@@ -52,53 +50,59 @@ def direction():
     direction = data.get("direction")
     state = data.get("state")
 
-    # Ensure only one direction is active at a time
-    if state == "move":
-        if current_direction != direction:
-            current_direction = direction  # Set new direction
-            print(f"Start moving {direction}")
+    # Set direction and state
+    if state == "move" and current_direction != direction:
+        current_direction = direction
+        print(f"Start moving {direction}")
     elif state == "stop" and current_direction == direction:
         current_direction = None
         print(f"Stop moving {direction}")
-    print(f"Received direction: {direction}, state: {state}")
+
     return jsonify({"status": "success", "direction": direction, "state": state})
 
+@socketio.on('audio_stream')
+def handle_audio_stream(data):
+    """Process incoming audio stream data from React."""
+    print("Received audio stream data:", data)
+    # Further audio data processing can be done here
 
 def generate_video():
     """Generate video frames for streaming."""
-    vc = cv2.VideoCapture(0)
+    vc = cv2.VideoCapture(0)  # Initialize VideoCapture
     if not vc.isOpened():
         return
 
-    while True:
-        rval, frame = vc.read()
-        if not rval:
-            break
-        with lock:
-            _, encoded_image = cv2.imencode(".jpg", frame)
-            yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encoded_image) + b'\r\n')
-    vc.release()
+    try:
+        while True:
+            rval, frame = vc.read()  # Read frame from the video capture device
+            if not rval:
+                break
+            with lock:
+                _, encoded_image = cv2.imencode(".jpg", frame)  # Encode the frame as JPEG
+                yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(encoded_image) + b'\r\n')
+    finally:
+        vc.release()  # Release the VideoCapture object after the loop is done
+
 
 def capture_audio():
-    """Capture audio in real-time and send to the client."""
+    """Capture audio in real-time and send to React."""
     def audio_callback(indata, frames, time, status):
         if status:
             print(status)
-        # Send audio data to React client
+        # Emit audio data to React client
         socketio.emit('audio_data', indata.tolist())
 
-    # Start audio stream
     with sd.InputStream(samplerate=SAMPLE_RATE, channels=1, callback=audio_callback, blocksize=CHUNK_SIZE):
         threading.Event().wait()  # Keep thread running
 
 @socketio.on('audio_data_from_client')
 def handle_audio_data_from_client(data):
-    """Receive audio data from the client."""
+    """Receive audio data from React client."""
     print("Received audio data from client:", data)
-    # Process or save the incoming audio data as needed
+    # Further audio data processing can be done here
 
 if __name__ == '__main__':
     # Start audio capture in a separate thread
-    threading.Thread(target=capture_audio).start()
-    # Run the Flask-SocketIO app
+    threading.Thread(target=capture_audio, daemon=True).start()
+    # Run Flask-SocketIO app
     socketio.run(app, host="0.0.0.0", port=8000, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)

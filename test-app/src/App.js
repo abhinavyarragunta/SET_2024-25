@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import io from 'socket.io-client';
 import './App.css';
 import DirectionButtons from './DirectionButtons';
@@ -6,96 +6,113 @@ import DirectionButtons from './DirectionButtons';
 function App() {
   const socket = useRef(null);
   const audioContextRef = useRef(null);
-  const audioStreamRef = useRef(null);
   const [ipAddress, setIpAddress] = useState('');
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const flaskServerUrl = "http://127.0.0.1:8000";
 
-  // Fetch the IP address from the Flask server when the component mounts
+  // Fetch the IP address from the Flask server
   useEffect(() => {
-    fetch(`${flaskServerUrl}/get-ip`)
-      .then(response => response.json())
-      .then(data => setIpAddress(data.ip))
-      .catch(error => console.error("Error fetching IP:", error));
+    const fetchIpAddress = async () => {
+      try {
+        const response = await fetch(`${flaskServerUrl}/get-ip`);
+        const data = await response.json();
+        setIpAddress(data.ip);
+      } catch (error) {
+        console.error("Error fetching IP:", error);
+      }
+    };
 
-    // Initialize WebSocket connection for audio data
+    fetchIpAddress();
+
+    // Initialize WebSocket connection
     socket.current = io(flaskServerUrl);
 
-    // Initialize AudioContext
-    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Listen for audio data from server
-    socket.current.on('audio_data', (data) => {
-      console.log("Received audio data:", data); // Log to check if audio data is received
-      const floatData = Float32Array.from(data);
-      const audioBuffer = audioContextRef.current.createBuffer(1, floatData.length, 44100);
-      audioBuffer.getChannelData(0).set(floatData);
-
-      // Play the audio data
-      const source = audioContextRef.current.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContextRef.current.destination);
-      source.start();
-    });
-
-    // Cleanup WebSocket and AudioContext when component unmounts
     return () => {
-      if (socket.current) socket.current.disconnect();
-      if (audioContextRef.current) audioContextRef.current.close();
+      socket.current.disconnect();  // Cleanup WebSocket on component unmount
     };
   }, []);
 
-  // Toggle video feed on/off
-  const toggleVideoFeed = () => {
-    setIsVideoOn(prevState => !prevState);
+  // Handle the WebSocket audio data reception
+  useEffect(() => {
+    if (!socket.current) return;
+
+    socket.current.on('audio_data', (data) => {
+      if (!isAudioOn) return;
+
+      const floatData = Float32Array.from(data);  // Convert data to Float32Array
+      const audioBuffer = audioContextRef.current.createBuffer(1, floatData.length, 44100);
+      audioBuffer.getChannelData(0).set(floatData);  // Set audio buffer data
+
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContextRef.current.destination);
+      source.start();  // Start audio playback
+    });
+
+    return () => {
+      socket.current.off('audio_data');  // Cleanup listener on unmount
+    };
+  }, [isAudioOn]);
+
+  // Toggle video feed
+  const toggleVideoFeed = useCallback(() => {
+    setIsVideoOn((prevState) => !prevState);
+  }, []);
+
+  // Start recording audio and send it to Flask
+  const startRecording = () => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const audioBuffer = reader.result;
+              socket.current.emit('audio_data_from_client', audioBuffer);  // Send audio data to Flask
+            };
+            reader.readAsArrayBuffer(event.data);
+          }
+        };
+        mediaRecorder.start(100);  // Capture audio in chunks every 100ms
+      })
+      .catch(error => console.error("Error accessing the microphone:", error));
   };
 
-  // Toggle audio feed on/off
+  // Toggle audio feed (start/stop recording)
   const toggleAudioFeed = () => {
-    setIsAudioOn(prevState => !prevState);
+    setIsAudioOn(prevState => {
+      const newState = !prevState;
+      if (newState) {
+        // Start recording when audio is turned on
+        startRecording();
+        // Create AudioContext if not already created or it was closed
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        socket.current.emit('start_audio_stream');  // Start audio stream from server
+      } else {
+        socket.current.emit('stop_audio_stream');  // Stop audio stream
+        // Close the AudioContext if it's open
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close().catch((err) => console.error('Error closing AudioContext:', err));
+        }
+      }
+
+      return newState;
+    });
   };
 
-  // Play a test tone for audio
-  const playTestTone = () => {
+  // Play test tone
+  const playTestTone = useCallback(() => {
     const oscillator = audioContextRef.current.createOscillator();
     oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(440, audioContextRef.current.currentTime); // A4 note
+    oscillator.frequency.setValueAtTime(440, audioContextRef.current.currentTime);  // A4 note
     oscillator.connect(audioContextRef.current.destination);
     oscillator.start();
-    oscillator.stop(audioContextRef.current.currentTime + 1); // Play for 1 second
-  };
-
-  // Start recording audio
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioStreamRef.current = stream;
-      setIsRecording(true);
-
-      // Send audio data to Flask via WebSocket
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = (event) => {
-        if (socket.current && event.data.size > 0) {
-          socket.current.emit('audio_stream', event.data); // Send audio to server
-        }
-      };
-      mediaRecorder.start(100); // Collect audio data in chunks (every 100ms)
-
-    } catch (error) {
-      console.error("Error accessing the microphone:", error);
-    }
-  };
-
-  // Stop recording audio
-  const stopRecording = () => {
-    if (audioStreamRef.current) {
-      const tracks = audioStreamRef.current.getTracks();
-      tracks.forEach(track => track.stop()); // Stop the tracks when done recording
-    }
-    setIsRecording(false);
-  };
+    oscillator.stop(audioContextRef.current.currentTime + 1);  // Play for 1 second
+  }, []);
 
   return (
     <div className="App">
@@ -113,18 +130,13 @@ function App() {
         </button>
 
         {/* Test Tone Button */}
-        <button onClick={playTestTone}>Play Test Tone</button>
-
-        {/* Recording Toggle Button */}
-        <button onClick={isRecording ? stopRecording : startRecording}>
-          {isRecording ? 'Stop Audio Recording' : 'Start Audio Recording'}
-        </button>
+        <button onClick={playTestTone}>Play Test Tone (loud)</button>
 
         {/* Video Feed */}
         {isVideoOn && (
           <div className="video-feed">
             <img
-              src={`${flaskServerUrl}/stream`} // Video stream endpoint
+              src={`${flaskServerUrl}/stream`}  // Video stream endpoint
               alt="Live Video Feed"
               onError={(e) => console.error("Error loading video feed:", e)}
               onLoad={() => console.log("Video feed loaded successfully")}
@@ -137,9 +149,8 @@ function App() {
         {/* Audio Feed */}
         {isAudioOn && (
           <audio
-            src={`${flaskServerUrl}/audio-stream`} // Live audio stream endpoint
+            src={`${flaskServerUrl}/audio-stream`}  // Live audio stream endpoint
             autoPlay
-            controls
             onError={(e) => console.error("Error loading audio feed:", e)}
             onLoadStart={() => console.log("Audio feed loading...")}
           />
