@@ -3,109 +3,124 @@ import cvzone
 import numpy as np
 import math
 import logging
+import torch
 from ultralytics import YOLO
+import json
+from datetime import datetime
+from deep_sort_realtime.deepsort_tracker import DeepSort
 
-# Configure logging
+# Configure logging to display information and debug messages
 logging.basicConfig(level=logging.INFO)
 
 
 class PoseEstimator:
     """
     Estimates human poses using a YOLO model and returns detection results.
-
-    Attributes:
-        model (YOLO): The YOLO model for pose estimation.
     """
 
-    def __init__(self, model_path):
+    def __init__(self, model_path: str):
         """
-        Initializes the PoseEstimator with the given model path.
+        Initializes the PoseEstimator with the given YOLO model path.
 
         Args:
             model_path (str): Path to the YOLO pose estimation model.
         """
-        self.model = YOLO(model_path)
+        # Determine the device to run the model on (GPU if available, else CPU)
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        logging.info(f"Using device: {self.device}")
 
-    def detect(self, frame):
+        # Initialize the YOLO model for pose estimation
+        self.model = YOLO(model_path)
+        # Move the model to the selected device
+        self.model.to(self.device)
+        logging.info(f"Model loaded and moved to device: {self.device}")
+
+    def detect_poses(self, frame: np.ndarray):
         """
         Performs pose detection on a given frame.
 
         Args:
-            frame (numpy.ndarray): The image frame to process.
+            frame (np.ndarray): The image frame to process.
 
         Returns:
-            tuple: Contains boxes, keypoints, keypoint_scores, class_ids,
-                   confidences, and the result object.
+            tuple: Contains bounding boxes, keypoints, keypoint scores,
+                   class IDs, confidences, and the result object.
         """
-        results = self.model(frame)
+        # Perform inference using the YOLO model
+        results = self.model.predict(frame, device=self.device)
 
-        if results[0].boxes is not None:
-            boxes = results[0].boxes.xyxy.int().cpu().tolist()
+        if results and results[0].boxes is not None:
+            # Extract bounding boxes, keypoints, and related information
+            bounding_boxes = results[0].boxes.xyxy.int().cpu().tolist()
             keypoints = results[0].keypoints.xy.int().cpu().tolist()
             keypoint_scores = results[0].keypoints.conf.cpu().tolist()
             class_ids = results[0].boxes.cls.int().cpu().tolist()
             confidences = results[0].boxes.conf.cpu().tolist()
-            return boxes, keypoints, keypoint_scores, class_ids, confidences, results[0]
+            return bounding_boxes, keypoints, keypoint_scores, class_ids, confidences, results[0]
 
+        # Return None if no detections are found
         return None, None, None, None, None, None
 
 
 class FallDetector:
     """
     Detects falls based on keypoint positions and body orientation.
-
-    Attributes:
-        fall_threshold_ratio (float): Ratio for nose-to-ankle height comparison.
-        angle_threshold (float): Angle threshold for torso orientation in degrees.
-        consecutive_frames (int): Number of consecutive frames to confirm a fall.
-        fall_frames (int): Counter for consecutive fall frames.
     """
 
-    def __init__(self, fall_threshold_ratio=0.6, angle_threshold=70, consecutive_frames=1):
+    def __init__(self, fall_ratio_threshold=0.6, torso_angle_threshold=70, required_consecutive_frames=1):
         """
-        Initializes the FallDetector with specified parameters.
+        Initializes the FallDetector with specified thresholds.
 
         Args:
-            fall_threshold_ratio (float): Ratio for height comparison.
-            angle_threshold (float): Angle threshold in degrees.
-            consecutive_frames (int): Frames required to confirm a fall.
+            fall_ratio_threshold (float): Ratio to determine if the nose is near ankle level.
+            torso_angle_threshold (float): Angle threshold to determine torso orientation.
+            required_consecutive_frames (int): Number of consecutive frames to confirm a fall.
         """
-        self.fall_threshold_ratio = fall_threshold_ratio
-        self.angle_threshold = angle_threshold
-        self.consecutive_frames = consecutive_frames
-        self.fall_frames = 0
-        self.torso_angles = []
-        self.torso_positions = []
+        self.fall_ratio_threshold = fall_ratio_threshold
+        self.torso_angle_threshold = torso_angle_threshold
+        self.required_consecutive_frames = required_consecutive_frames
+
+        # Dictionaries to keep track of fall-related metrics per track ID
+        self.fall_frame_counts = {}
+        self.torso_angle_history = {}
+        self.torso_position_history = {}
         self.history_length = 5  # Number of frames to keep in history
 
-    def update_torso_history(self, angle, position):
+    def update_torso_history(self, track_id: int, angle: float, position_y: float):
         """
-        Updates the torso history buffers.
+        Updates the history of torso angles and positions for a given track ID.
 
         Args:
-            angle (float): Torso angle.
-            position (float): Torso Y-position.
+            track_id (int): Unique identifier for the tracked person.
+            angle (float): Current torso angle.
+            position_y (float): Current Y-position of the torso.
         """
-        self.torso_angles.append(angle)
-        self.torso_positions.append(position)
+        if track_id not in self.torso_angle_history:
+            self.torso_angle_history[track_id] = []
+            self.torso_position_history[track_id] = []
 
-        if len(self.torso_angles) > self.history_length:
-            self.torso_angles.pop(0)
-            self.torso_positions.pop(0)
+        self.torso_angle_history[track_id].append(angle)
+        self.torso_position_history[track_id].append(position_y)
 
-    def is_fallen(self, keypoints, keypoint_scores):
+        # Maintain history length
+        if len(self.torso_angle_history[track_id]) > self.history_length:
+            self.torso_angle_history[track_id].pop(0)
+            self.torso_position_history[track_id].pop(0)
+
+    def is_fallen(self, keypoints: list, keypoint_scores: list, track_id: int) -> bool:
         """
-        Determines if a person has fallen based on keypoints.
+        Determines if a person has fallen based on keypoints and torso orientation.
 
         Args:
             keypoints (list): List of keypoint coordinates.
             keypoint_scores (list): List of keypoint confidence scores.
+            track_id (int): Unique identifier for the tracked person.
 
         Returns:
             bool: True if a fall is detected, False otherwise.
         """
         try:
-            # Required keypoints with minimum confidence
+            # Define required keypoints with minimum confidence thresholds
             required_keypoints = {
                 0: 0.1,   # Nose
                 5: 0.1,   # Left Shoulder
@@ -116,16 +131,16 @@ class FallDetector:
                 16: 0.1   # Right Ankle
             }
 
-            # Check keypoint confidences and existence
+            # Validate the presence and confidence of required keypoints
             for idx, min_conf in required_keypoints.items():
                 if idx >= len(keypoint_scores) or keypoint_scores[idx] < min_conf:
                     logging.info(f"Low confidence or missing keypoint {idx}")
                     return False
 
-            # Keypoints positions
+            # Extract Y-coordinate of the nose
             nose_y = keypoints[0][1]
 
-            # Use available ankle keypoints
+            # Collect available ankle Y-coordinates
             ankle_ys = []
             if keypoint_scores[15] >= required_keypoints[15]:
                 ankle_ys.append(keypoints[15][1])
@@ -137,14 +152,13 @@ class FallDetector:
                 return False
 
             avg_ankle_y = np.mean(ankle_ys)
+            body_height = abs(nose_y - avg_ankle_y)
+            fall_threshold = self.fall_ratio_threshold * body_height
 
-            height = abs(nose_y - avg_ankle_y)
-            threshold = self.fall_threshold_ratio * height
+            # Check if the nose is near ankle level
+            nose_near_ankles = abs(nose_y - avg_ankle_y) < fall_threshold
 
-            # Check if nose is near ankle level
-            nose_near_ankles = abs(nose_y - avg_ankle_y) < threshold
-
-            # Torso angle calculation using available keypoints
+            # Calculate torso angle using shoulder and hip keypoints
             shoulders = []
             if keypoint_scores[5] >= required_keypoints[5]:
                 shoulders.append(keypoints[5])
@@ -158,53 +172,57 @@ class FallDetector:
                 hips.append(keypoints[12])
 
             if len(shoulders) < 1 or len(hips) < 1:
-                logging.info("Not enough keypoints for torso angle calculation")
+                logging.info("Insufficient keypoints for torso angle calculation")
                 return False
 
+            # Compute midpoints of shoulders and hips
             shoulder_midpoint = np.mean(shoulders, axis=0)
             hip_midpoint = np.mean(hips, axis=0)
 
             delta_x = hip_midpoint[0] - shoulder_midpoint[0]
             delta_y = hip_midpoint[1] - shoulder_midpoint[1]
-            angle = abs(math.degrees(math.atan2(delta_y, delta_x)))
+            torso_angle = abs(math.degrees(math.atan2(delta_y, delta_x)))
 
-            if angle > 90:
-                angle = 180 - angle
+            # Normalize the angle to be within 0-90 degrees
+            if torso_angle > 90:
+                torso_angle = 180 - torso_angle
 
-            torso_near_horizontal = angle < self.angle_threshold
+            torso_near_horizontal = torso_angle < self.torso_angle_threshold
 
-            # Logging for debugging
-            logging.debug(f"Torso angle: {angle}")
+            # Logging for debugging purposes
+            logging.debug(f"Torso angle: {torso_angle}")
             logging.debug(f"Nose near ankles: {nose_near_ankles}")
             logging.debug(f"Torso near horizontal: {torso_near_horizontal}")
 
             # Update torso history
-            self.update_torso_history(angle, hip_midpoint[1])
+            self.update_torso_history(track_id, torso_angle, hip_midpoint[1])
 
-            if len(self.torso_angles) < self.history_length:
-                # Not enough data yet
+            if len(self.torso_angle_history[track_id]) < self.history_length:
+                # Not enough historical data to confirm a fall
                 return False
 
-            # Compute the change in angle and position
-            angle_change = self.torso_angles[-1] - self.torso_angles[0]
-            position_change = self.torso_positions[-1] - self.torso_positions[0]
+            # Calculate changes in torso angle and position over the history
+            angle_change = self.torso_angle_history[track_id][-1] - self.torso_angle_history[track_id][0]
+            position_change = self.torso_position_history[track_id][-1] - self.torso_position_history[track_id][0]
 
+            # Determine if a fall is detected based on criteria
             fall_detected = (nose_near_ankles or torso_near_horizontal) and angle_change > 20 and position_change > 30
 
             if fall_detected:
-                self.fall_frames += 1
+                self.fall_frame_counts[track_id] = self.fall_frame_counts.get(track_id, 0) + 1
             else:
-                self.fall_frames = 0
+                self.fall_frame_counts[track_id] = 0
 
-            return self.fall_frames >= self.consecutive_frames
+            # Confirm fall if the required number of consecutive frames meet the criteria
+            return self.fall_frame_counts[track_id] >= self.required_consecutive_frames
 
         except Exception as e:
             logging.warning(f"Error in fall detection: {e}")
             return False
 
-    def is_sitting(self, keypoints, keypoint_scores, frame_height):
+    def is_sitting(self, keypoints: list, keypoint_scores: list, frame_height: int) -> bool:
         """
-        Determines if a person is sitting on the ground or against a wall.
+        Determines if a person is sitting based on hip keypoints.
 
         Args:
             keypoints (list): List of keypoint coordinates.
@@ -215,21 +233,22 @@ class FallDetector:
             bool: True if sitting is detected, False otherwise.
         """
         try:
+            # Define required keypoints for hips with minimum confidence
             required_keypoints = {11: 0.1, 12: 0.1}  # Left and Right Hips
-            hips = []
+            hip_y_positions = []
             for idx, min_conf in required_keypoints.items():
                 if idx < len(keypoint_scores) and keypoint_scores[idx] >= min_conf:
-                    hips.append(keypoints[idx][1])
+                    hip_y_positions.append(keypoints[idx][1])
                 else:
                     logging.info(f"Low confidence or missing keypoint {idx}")
 
-            if not hips:
+            if not hip_y_positions:
                 return False
 
-            avg_hip_y = np.mean(hips)
+            avg_hip_y = np.mean(hip_y_positions)
 
-            # If hips are near the bottom of the frame, person might be sitting
-            sitting_threshold = frame_height * 0.8  # Adjust as needed
+            # Define threshold to determine if hips are near the bottom of the frame
+            sitting_threshold = frame_height * 0.8  # 80% of frame height
 
             sitting_detected = avg_hip_y > sitting_threshold
 
@@ -244,98 +263,114 @@ class FallDetector:
 class InjuryAnalyzer:
     """
     Analyzes potential injuries based on color detection and posture analysis.
-
-    Attributes:
-        red_intensity_threshold (int): Threshold for red intensity in injury detection.
-        red_difference_threshold (int): Threshold for red difference in injury detection.
-        curl_up_distance_threshold (int): Distance threshold for curled-up posture detection.
-        limping_ankle_diff_threshold (int): Ankle Y-coordinate difference threshold for limping detection.
     """
 
-    def __init__(self, red_intensity_threshold=130, red_difference_threshold=70,
-                 curl_up_distance_threshold=80, limping_ankle_diff_threshold=20):
+    def __init__(self,
+                 red_intensity_threshold: int = 130,
+                 red_difference_threshold: int = 70,
+                 curl_up_distance_threshold: float = 80.0,
+                 limping_ankle_diff_threshold: float = 20.0):
         """
         Initializes the InjuryAnalyzer with specified thresholds.
 
         Args:
-            red_intensity_threshold (int): Red intensity threshold.
-            red_difference_threshold (int): Red difference threshold.
-            curl_up_distance_threshold (int): Distance threshold for curled-up detection.
-            limping_ankle_diff_threshold (int): Ankle difference threshold for limping detection.
+            red_intensity_threshold (int): Threshold for red color intensity.
+            red_difference_threshold (int): Threshold for red color difference.
+            curl_up_distance_threshold (float): Distance threshold to detect curled-up posture.
+            limping_ankle_diff_threshold (float): Difference threshold to detect limping.
         """
         self.red_intensity_threshold = red_intensity_threshold
         self.red_difference_threshold = red_difference_threshold
         self.curl_up_distance_threshold = curl_up_distance_threshold
         self.limping_ankle_diff_threshold = limping_ankle_diff_threshold
-        self.left_ankle_history = []
-        self.right_ankle_history = []
+
+        # Dictionaries to keep track of ankle positions per track ID
+        self.left_ankle_history = {}
+        self.right_ankle_history = {}
         self.history_length = 5  # Number of frames to keep in history
 
-    def update_ankle_history(self, left_ankle_y, right_ankle_y):
+    def update_ankle_history(self, track_id: int, left_ankle_y: float, right_ankle_y: float):
         """
-        Updates the ankle history buffers.
+        Updates the history of ankle Y-positions for a given track ID.
 
         Args:
-            left_ankle_y (float): Y-position of the left ankle.
-            right_ankle_y (float): Y-position of the right ankle.
+            track_id (int): Unique identifier for the tracked person.
+            left_ankle_y (float): Current Y-position of the left ankle.
+            right_ankle_y (float): Current Y-position of the right ankle.
         """
-        self.left_ankle_history.append(left_ankle_y)
-        self.right_ankle_history.append(right_ankle_y)
+        if track_id not in self.left_ankle_history:
+            self.left_ankle_history[track_id] = []
+            self.right_ankle_history[track_id] = []
 
-        if len(self.left_ankle_history) > self.history_length:
-            self.left_ankle_history.pop(0)
-            self.right_ankle_history.pop(0)
+        self.left_ankle_history[track_id].append(left_ankle_y)
+        self.right_ankle_history[track_id].append(right_ankle_y)
 
-    def detect_injury_color(self, frame, x1, y1, x2, y2):
+        # Maintain history length
+        if len(self.left_ankle_history[track_id]) > self.history_length:
+            self.left_ankle_history[track_id].pop(0)
+            self.right_ankle_history[track_id].pop(0)
+
+    def detect_injury_color(self, frame: np.ndarray, x1: int, y1: int, x2: int, y2: int) -> bool:
         """
-        Detects potential injuries based on red color intensity.
+        Detects potential injuries based on red color intensity in specific regions.
 
         Args:
-            frame (numpy.ndarray): The image frame to analyze.
-            x1, y1, x2, y2 (int): Coordinates of the bounding box.
+            frame (np.ndarray): The image frame being analyzed.
+            x1 (int): Top-left X-coordinate of the bounding box.
+            y1 (int): Top-left Y-coordinate of the bounding box.
+            x2 (int): Bottom-right X-coordinate of the bounding box.
+            y2 (int): Bottom-right Y-coordinate of the bounding box.
 
         Returns:
-            bool: True if an injury is detected, False otherwise.
+            bool: True if potential injury is detected, False otherwise.
         """
         injury_detected = False
 
-        # Define areas for head and torso
-        head_area = frame[y1:y1 + 50, x1:x2]
-        torso_area = frame[y1 + 50:y1 + 150, x1:x2]
+        try:
+            # Define regions for head and torso within the bounding box
+            head_region = frame[y1:y1 + 50, x1:x2]
+            torso_region = frame[y1 + 50:y1 + 150, x1:x2]
 
-        avg_color_head = cv2.mean(head_area)[:3]
-        avg_color_torso = cv2.mean(torso_area)[:3]
+            # Calculate average color in BGR format
+            avg_color_head = cv2.mean(head_region)[:3]
+            avg_color_torso = cv2.mean(torso_region)[:3]
 
-        # Check for high red intensity in head area
-        if (avg_color_head[2] > self.red_intensity_threshold and
-                (avg_color_head[2] - np.mean([avg_color_head[0], avg_color_head[1]])) > self.red_difference_threshold):
-            injury_detected = True
-            cv2.putText(frame, "Potential Head Injury", (x1, y1 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            # Check for high red intensity in the head region
+            if (avg_color_head[2] > self.red_intensity_threshold and
+                    (avg_color_head[2] - np.mean([avg_color_head[0], avg_color_head[1]])) > self.red_difference_threshold):
+                injury_detected = True
+                cv2.putText(frame, "Potential Head Injury", (x1, y1 - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
-        # Check for high red intensity in torso area
-        if (avg_color_torso[2] > self.red_intensity_threshold and
-                (avg_color_torso[2] - np.mean([avg_color_torso[0], avg_color_torso[1]])) > self.red_difference_threshold):
-            injury_detected = True
-            cv2.putText(frame, "Potential Torso Injury", (x1, y1 + 60),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            # Check for high red intensity in the torso region
+            if (avg_color_torso[2] > self.red_intensity_threshold and
+                    (avg_color_torso[2] - np.mean([avg_color_torso[0], avg_color_torso[1]])) > self.red_difference_threshold):
+                injury_detected = True
+                cv2.putText(frame, "Potential Torso Injury", (x1, y1 + 60),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+
+        except Exception as e:
+            logging.warning(f"Error in injury color detection: {e}")
 
         return injury_detected
 
-    def is_limping(self, keypoints, keypoint_scores):
+    def is_limping(self, keypoints: list, keypoint_scores: list, track_id: int) -> bool:
         """
-        Determines if a person is limping based on ankle positions.
+        Determines if a person is limping based on ankle position variations.
 
         Args:
             keypoints (list): List of keypoint coordinates.
             keypoint_scores (list): List of keypoint confidence scores.
+            track_id (int): Unique identifier for the tracked person.
 
         Returns:
             bool: True if limping is detected, False otherwise.
         """
         try:
+            # Define required keypoints for ankles with minimum confidence
             required_keypoints = {15: 0.1, 16: 0.1}  # Left and Right Ankles
             available_ankles = []
+
             for idx, min_conf in required_keypoints.items():
                 if idx < len(keypoint_scores) and keypoint_scores[idx] >= min_conf:
                     available_ankles.append(keypoints[idx][1])
@@ -343,28 +378,32 @@ class InjuryAnalyzer:
                     logging.info(f"Low confidence or missing keypoint {idx}")
 
             if len(available_ankles) < 2:
-                logging.info("Not enough ankle keypoints for limping detection")
+                logging.info("Insufficient ankle keypoints for limping detection")
                 return False
 
+            # Extract Y-positions of left and right ankles
             left_ankle_y = keypoints[15][1]
             right_ankle_y = keypoints[16][1]
 
-            self.update_ankle_history(left_ankle_y, right_ankle_y)
+            # Update ankle history
+            self.update_ankle_history(track_id, left_ankle_y, right_ankle_y)
 
-            if len(self.left_ankle_history) < self.history_length:
-                # Not enough data yet
+            if len(self.left_ankle_history[track_id]) < self.history_length:
+                # Not enough historical data to confirm limping
                 return False
 
-            # Compute the differences in ankle positions
-            left_diffs = np.diff(self.left_ankle_history)
-            right_diffs = np.diff(self.right_ankle_history)
+            # Calculate differences in ankle positions over the history
+            left_diffs = np.diff(self.left_ankle_history[track_id])
+            right_diffs = np.diff(self.right_ankle_history[track_id])
 
-            # Calculate the standard deviation of the differences
+            # Calculate standard deviation of the differences
             left_std = np.std(left_diffs)
             right_std = np.std(right_diffs)
 
+            # Avoid division by zero by adding a small epsilon
             std_ratio = max(left_std, right_std) / (min(left_std, right_std) + 1e-5)
 
+            # Determine if limping is detected based on standard deviation ratio
             limping_detected = std_ratio > 1.5
 
             logging.debug(f"Limping detected: {limping_detected}")
@@ -374,18 +413,19 @@ class InjuryAnalyzer:
             logging.warning(f"Error in limping detection: {e}")
             return False
 
-    def is_curled_up(self, keypoints, keypoint_scores):
+    def is_curled_up(self, keypoints: list, keypoint_scores: list) -> bool:
         """
-        Determines if a person is in a curled-up position.
+        Determines if a person is in a curled-up position based on keypoint proximity.
 
         Args:
             keypoints (list): List of keypoint coordinates.
             keypoint_scores (list): List of keypoint confidence scores.
 
         Returns:
-            bool: True if curled-up posture is detected, False otherwise.
+            bool: True if the person is curled up, False otherwise.
         """
         try:
+            # Define required keypoints with minimum confidence thresholds
             required_keypoints = {
                 7: 0.1,   # Left Elbow
                 8: 0.1,   # Right Elbow
@@ -394,6 +434,7 @@ class InjuryAnalyzer:
                 11: 0.1,  # Left Hip
                 12: 0.1   # Right Hip
             }
+
             available_elbows = []
             available_knees = []
             hips = []
@@ -410,12 +451,13 @@ class InjuryAnalyzer:
                     logging.info(f"Low confidence or missing keypoint {idx}")
 
             if len(hips) < 1:
-                logging.info("Not enough hip keypoints for curled-up detection")
+                logging.info("Insufficient hip keypoints for curled-up detection")
                 return False
 
+            # Calculate the center point of the hips
             hip_center = np.mean(hips, axis=0)
 
-            # Adjusted thresholds for detection
+            # Check if elbows and knees are near the hip center within the distance threshold
             elbows_near_hips = all(
                 np.linalg.norm(elbow - hip_center) < self.curl_up_distance_threshold
                 for elbow in available_elbows
@@ -442,26 +484,34 @@ class DisplayManager:
     """
 
     @staticmethod
-    def draw_status(frame, box, fall_status, class_id, injury_status):
+    def draw_status(frame: np.ndarray, bounding_box: list, fall_status: str, track_id: int, injury_status: str):
         """
         Draws the detection status and bounding box on the frame.
 
         Args:
-            frame (numpy.ndarray): The image frame to draw on.
-            box (list): Coordinates of the bounding box.
-            fall_status (str): The fall status ("Fallen" or "Normal").
-            class_id (int): ID of the detected person.
-            injury_status (str): The injury status ("Injured" or "Normal").
+            frame (np.ndarray): The image frame to draw on.
+            bounding_box (list): Bounding box coordinates [x1, y1, x2, y2].
+            fall_status (str): Status indicating if the person has fallen.
+            track_id (int): Unique identifier for the tracked person.
+            injury_status (str): Status indicating if the person is injured.
         """
-        x1, y1, x2, y2 = box
-        color = (0, 255, 0)  # Default color: green
+        x1, y1, x2, y2 = bounding_box
+        box_color = (0, 255, 0)  # Green for normal status
 
+        # Change box color to red if a fall or injury is detected
         if fall_status == "Fallen" or injury_status == "Injured":
-            color = (0, 0, 255)  # Alert color: red
+            box_color = (0, 0, 255)  # Red for alert
 
-        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+        # Draw the bounding box around the person
+        cv2.rectangle(frame, (x1, y1), (x2, y2), box_color, 2)
+
+        # Prepare status text
         status_text = f"{fall_status}, {injury_status}"
-        cvzone.putTextRect(frame, f'ID: {class_id}', (x1, y1 - 45), scale=1, thickness=1)
+
+        # Display the track ID above the bounding box
+        cvzone.putTextRect(frame, f'ID: {track_id}', (x1, y1 - 45), scale=1, thickness=1)
+
+        # Display the status below the track ID
         cvzone.putTextRect(frame, status_text, (x1, y1 - 25), scale=1, thickness=1)
 
 
@@ -470,9 +520,9 @@ class FallDetectionSystem:
     Main system class that integrates pose estimation, fall detection, and injury analysis.
     """
 
-    def __init__(self, model_path):
+    def __init__(self, model_path: str):
         """
-        Initializes the FallDetectionSystem with the specified model path.
+        Initializes the FallDetectionSystem with the specified YOLO model path.
 
         Args:
             model_path (str): Path to the YOLO pose estimation model.
@@ -481,101 +531,245 @@ class FallDetectionSystem:
         self.fall_detector = FallDetector()
         self.injury_analyzer = InjuryAnalyzer()
         self.display_manager = DisplayManager()
+        self.detections = []  # List to store detection data
+        # Initialize DeepSort tracker with specified parameters
+        self.tracker = DeepSort(max_age=5, n_init=3, max_iou_distance=0.7)
 
-    def process_frame(self, frame):
+    def process_frame(self, frame: np.ndarray) -> np.ndarray:
         """
         Processes a single frame for fall and injury detection.
 
         Args:
-            frame (numpy.ndarray): The image frame to process.
+            frame (np.ndarray): The image frame to process.
 
         Returns:
-            numpy.ndarray: The processed frame with overlays.
+            np.ndarray: The processed frame with overlays.
         """
-        boxes, keypoints_list, keypoint_scores_list, class_ids, confidences, result = self.pose_estimator.detect(frame)
+        # Perform pose estimation on the frame
+        bounding_boxes, keypoints_list, keypoint_scores_list, class_ids, confidences, result = self.pose_estimator.detect_poses(frame)
 
-        if boxes is None:
+        if bounding_boxes is None:
             logging.info("No detections available.")
-            # Reset histories
-            self.fall_detector.torso_angles.clear()
-            self.fall_detector.torso_positions.clear()
+            # Clear histories as no persons are detected
+            self.fall_detector.torso_angle_history.clear()
+            self.fall_detector.torso_position_history.clear()
             self.injury_analyzer.left_ankle_history.clear()
             self.injury_analyzer.right_ankle_history.clear()
             return frame
 
         frame_height, frame_width = frame.shape[:2]
 
-        for box, keypoints, keypoint_scores, class_id in zip(boxes, keypoints_list, keypoint_scores_list, class_ids):
+        # Prepare detections for the tracker in the format (bbox, confidence, class)
+        tracker_detections = []
+        for bbox, confidence in zip(bounding_boxes, confidences):
+            x1, y1, x2, y2 = bbox
+            width = x2 - x1
+            height = y2 - y1
+            tracker_bbox = [x1, y1, width, height]  # DeepSort expects [x, y, w, h]
+            tracker_detections.append((tracker_bbox, confidence, 'person'))
+
+        # Update tracker with current frame detections
+        tracks = self.tracker.update_tracks(tracker_detections, frame=frame)
+
+        # Map track IDs to their corresponding detection indices
+        track_id_to_detection_idx = {}
+        for track in tracks:
+            if not track.is_confirmed():
+                continue
+            track_id = track.track_id
+            ltrb = track.to_ltrb()
+            x1, y1, x2, y2 = map(int, ltrb)
+            bbox = [x1, y1, x2, y2]
+            # Find the detection index that matches the current bounding box
+            detection_idx = self._find_matching_detection_index(bbox, bounding_boxes)
+            if detection_idx is not None:
+                track_id_to_detection_idx[track_id] = detection_idx
+
+        # Iterate through each tracked detection
+        for track_id, detection_idx in track_id_to_detection_idx.items():
+            bounding_box = bounding_boxes[detection_idx]
+            keypoints = keypoints_list[detection_idx]
+            keypoint_scores = keypoint_scores_list[detection_idx]
+            confidence = confidences[detection_idx]
+
             if len(keypoints) > 16:
-                # Fall Detection
-                fall_detected = self.fall_detector.is_fallen(keypoints, keypoint_scores)
+                # Perform fall detection
+                fall_detected = self.fall_detector.is_fallen(keypoints, keypoint_scores, track_id)
                 sitting_detected = self.fall_detector.is_sitting(keypoints, keypoint_scores, frame_height)
 
+                # Determine fall status based on detections
                 if fall_detected or sitting_detected:
                     fall_status = "Fallen"
                 else:
                     fall_status = "Normal"
 
-                # Injury Detection
+                # Initialize injury status
                 injured = False
 
-                # Classify as injured if fallen
+                # Mark as injured if a fall is detected
                 if fall_detected:
                     injured = True
 
-                # Detect potential injuries based on color
-                if self.injury_analyzer.detect_injury_color(frame, *box):
+                # Detect potential injuries based on color analysis
+                if self.injury_analyzer.detect_injury_color(frame, *bounding_box):
                     injured = True
 
                 # Check for limping
-                if self.injury_analyzer.is_limping(keypoints, keypoint_scores):
+                if self.injury_analyzer.is_limping(keypoints, keypoint_scores, track_id):
                     injured = True
 
                 # Check if the person is curled up
                 if self.injury_analyzer.is_curled_up(keypoints, keypoint_scores):
                     injured = True
 
+                # Set injury status based on detections
                 injury_status = "Injured" if injured else "Normal"
 
-                # Display Results
-                self.display_manager.draw_status(frame, box, fall_status, class_id, injury_status)
+                # Create a dictionary to store detection data
+                detection_data = {
+                    'timestamp': datetime.now().isoformat(),
+                    'track_id': int(track_id),
+                    'bounding_box': bounding_box,
+                    'fall_status': fall_status,
+                    'injury_status': injury_status,
+                    'confidence': float(confidence)
+                }
+
+                # Append the detection data to the list
+                self.detections.append(detection_data)
+
+                # Draw the status and bounding box on the frame
+                self.display_manager.draw_status(frame, bounding_box, fall_status, track_id, injury_status)
             else:
                 logging.info("Insufficient keypoints for detailed analysis.")
 
-        # Overlay the skeletons on the frame
+        # Overlay the skeletons on the frame using the YOLO result
         frame_with_skeletons = result.plot()
 
+        # Save detections to a JSON file
+        self._write_detections_to_json()
+
         return frame_with_skeletons
+
+    def _find_matching_detection_index(self, bbox: list, bounding_boxes: list) -> int:
+        """
+        Finds the index of the detection that matches the given bounding box based on IoU.
+
+        Args:
+            bbox (list): Bounding box coordinates [x1, y1, x2, y2].
+            bounding_boxes (list): List of all bounding boxes in the current frame.
+
+        Returns:
+            int: Index of the matching detection, or None if no match is found.
+        """
+        for idx, box in enumerate(bounding_boxes):
+            iou = self._compute_iou(bbox, box)
+            if iou > 0.5:
+                return idx
+        return None
+
+    @staticmethod
+    def _compute_iou(box_a: list, box_b: list) -> float:
+        """
+        Computes the Intersection over Union (IoU) between two bounding boxes.
+
+        Args:
+            box_a (list): First bounding box [x1, y1, x2, y2].
+            box_b (list): Second bounding box [x1, y1, x2, y2].
+
+        Returns:
+            float: IoU value.
+        """
+        xA = max(box_a[0], box_b[0])
+        yA = max(box_a[1], box_b[1])
+        xB = min(box_a[2], box_b[2])
+        yB = min(box_a[3], box_b[3])
+
+        # Compute the area of intersection
+        inter_width = max(0, xB - xA)
+        inter_height = max(0, yB - yA)
+        inter_area = inter_width * inter_height
+
+        if inter_area == 0:
+            return 0.0
+
+        # Compute the area of both bounding boxes
+        box_a_area = (box_a[2] - box_a[0]) * (box_a[3] - box_a[1])
+        box_b_area = (box_b[2] - box_b[0]) * (box_b[3] - box_b[1])
+
+        # Compute the IoU
+        iou = inter_area / float(box_a_area + box_b_area - inter_area)
+        return iou
+
+    def _write_detections_to_json(self):
+        """
+        Writes the collected detection data to a JSON file.
+        """
+        json_file_path = 'detections.json'
+
+        # Attempt to read existing data from the JSON file
+        try:
+            with open(json_file_path, 'r') as json_file:
+                existing_data = json.load(json_file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            existing_data = {}
+
+        # Update existing data with new detections
+        for detection in self.detections:
+            track_id = str(detection['track_id'])
+            if track_id not in existing_data:
+                existing_data[track_id] = []
+            existing_data[track_id].append(detection)
+
+        # Write the updated data back to the JSON file
+        try:
+            with open(json_file_path, 'w') as json_file:
+                json.dump(existing_data, json_file, indent=4)
+        except Exception as e:
+            logging.error(f"Error writing detections to JSON: {e}")
+
+        # Clear the detections list after writing to the file
+        self.detections.clear()
 
 
 def main():
     """
     Main function to run the Fall Detection System.
     """
-    # Update the path to your model
-    model_path = 'yolo11x-pose (1).pt'
-    fall_system = FallDetectionSystem(model_path)
+    # Path to the YOLO pose estimation model
+    model_path = '../yolo11x-pose (1).pt'
 
-    cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
+    # Initialize the Fall Detection System
+    fall_detection_system = FallDetectionSystem(model_path)
+
+    # Initialize video capture from the default webcam
+    video_capture = cv2.VideoCapture(0)
+    if not video_capture.isOpened():
         logging.error("Error: Could not open webcam.")
         return
 
+    logging.info("Fall Detection System is running. Press 'q' to quit.")
+
     while True:
-        ret, frame = cap.read()
+        # Read a frame from the webcam
+        ret, frame = video_capture.read()
         if not ret:
-            logging.error("Error: Could not read frame.")
+            logging.error("Error: Could not read frame from webcam.")
             break
 
-        # Process frame using FallDetectionSystem
-        processed_frame = fall_system.process_frame(frame)
+        # Process the frame for fall and injury detection
+        processed_frame = fall_detection_system.process_frame(frame)
 
-        # Display frame
+        # Display the processed frame in a window
         cv2.imshow('Fall Detection System', processed_frame)
+
+        # Exit the loop if 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            logging.info("Exiting Fall Detection System.")
             break
 
-    cap.release()
+    # Release the video capture object and close all OpenCV windows
+    video_capture.release()
     cv2.destroyAllWindows()
 
 
