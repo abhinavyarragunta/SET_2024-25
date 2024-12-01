@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libsm6 \
     libxext6 \
     libportaudio2 \
+    libgl1-mesa-glx \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY src/*.py /app/
