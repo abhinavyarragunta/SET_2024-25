@@ -40,6 +40,6 @@ jobs:
           file: ./Dockerfile  # Specify Dockerfile path
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/set:test
-          platforms: linux/arm64,linux/amd64
+          platforms: linux/arm64
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
