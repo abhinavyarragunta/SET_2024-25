@@ -36,7 +36,7 @@ docker images
 Then run the docker, which creates a container using the following command:
 
 ```bash
-docker run mannvika/set:tag
+sudo docker run --netowrk host --device /dev/video:/devideo0 -p 800:8000 mannvika/set:test
 ```
 
 ## Commiting Changes
