@@ -5,7 +5,7 @@ import cv2
 import sounddevice as sd
 import numpy as np
 import threading
-from vision import FallDetectionSystem
+from fall_detection_system import FallDetectionSystem
 
 app = Flask(__name__)
 CORS(app)

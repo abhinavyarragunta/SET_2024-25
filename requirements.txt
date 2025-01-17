@@ -7,3 +7,4 @@ sounddevice
 scikit-build
 cvzone
 ultralytics
+deep-sort-realtime

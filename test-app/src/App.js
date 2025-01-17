@@ -10,7 +10,7 @@ function App() {
         socket.current = io('http://127.0.0.1:8000');
 
         // Initialize AudioContext
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        audioContextRef.current = new (window.AudioContext || window.webkitAudinpmoContext)();
 
         // Listen for audio data from server
         socket.current.on('audio_data', (data) => {
