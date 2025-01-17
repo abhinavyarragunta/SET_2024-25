@@ -6,10 +6,47 @@ import sounddevice as sd
 import numpy as np
 import threading
 from fall_detection_system import FallDetectionSystem
+import socket
+import requests
+
+webhook = "https://discord.com/api/webhooks/1329628120893882400/7cS1A-p39TJDDQghAKOFWcUoqznHEm910SpAnPhblKiOd76RHi4RKHVp_EMWKfhxBAVG"
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        s.connect(("8.8.8.8", 80))  # Connects to Google DNS (doesn't actually send data)
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "Unable to determine local IP"
+    finally:
+        s.close()
+    return ip
+
+def discord_message(ip):
+    message = {
+        "embeds": [{
+        "title": f"IP Address",
+        "color": 65280,
+        "description": f"{ip}:8000"
+        }]
+    }
+
+    x = requests.post(webhook, json=message)
+    if x.status_code == 204:
+        print("success")
+    else:
+        print("failed")
+
+print("Local Network IP Address:", get_local_ip())
+discord_message(get_local_ip())
+
 
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+
 
 # Video and audio parameters
 SAMPLE_RATE = 44100  # Audio sample rate in Hz
@@ -63,4 +100,5 @@ if __name__ == '__main__':
     # Start audio capture in a separate thread
     #threading.Thread(target=capture_audio).start()
     # Run the Flask-SocketIO app
+    print("Local Network IP Address:", get_local_ip())
     socketio.run(app, host="0.0.0.0", port=8000, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
