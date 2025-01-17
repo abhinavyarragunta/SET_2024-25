@@ -9,7 +9,7 @@ from fall_detection_system import FallDetectionSystem
 import socket
 import requests
 
-webhook = "https://discord.com/api/webhooks/1329628120893882400/7cS1A-p39TJDDQghAKOFWcUoqznHEm910SpAnPhblKiOd76RHi4RKHVp_EMWKfhxBAVG"
+webhook = "https://discord.com/api/webhooks/1329639907442036769/5ShE26g-ZleAN1lY7L5lPGv-HyqZx7TukNTF2rrAwuQeWNUku4dNMrsWZBnHKnJYZOlN"
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
