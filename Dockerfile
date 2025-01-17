@@ -4,10 +4,8 @@ WORKDIR /app
 
 COPY requirements.txt /app/
 
-RUN pip install -r requirements.txt
-
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libportaudio2 -y 
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src/*.py /app/
 
-CMD ["python", "app.py", "vision.py"]
+CMD ["python", "app.py"]
