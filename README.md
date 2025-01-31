@@ -41,3 +41,15 @@ sudo docker run -it --rm --network host --device /dev/video0:/devideo0 --privile
 
 ## Commiting Changes
 After you have confirmed your changes, commit to your branch on github, navigate to the Actions tab, select the Build and Push Docker Image tab on the right-hand side, then click the Run workflow dropdown menu, select a branch to build, then click run workflow.
+
+## SSHing into Jetson
+run on Jetson:
+```bash
+ngrok config add-authtoken YOUR_NGROK_AUTH_TOKEN
+ngrok tcp 22
+```
+
+Run on maching sshing:
+```bash
+ssh ufset@8.tcp.ngrok.io -p <port>
+```
