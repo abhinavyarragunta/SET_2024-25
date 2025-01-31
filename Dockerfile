@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM nvidia/cuda:10.2-runtime-ubuntu18.04
 
 WORKDIR /app
 
