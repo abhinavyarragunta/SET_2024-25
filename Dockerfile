@@ -1,6 +1,11 @@
-FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+FROM python:3.9-slim
 
 WORKDIR /app
+
+# Set Python environment variables explicitly
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/usr/local/bin:${PATH}"
 
 # Install system build dependencies
 RUN apt-get update && apt-get install -y \
@@ -18,21 +23,22 @@ RUN apt-get update && apt-get install -y \
     libportaudiocpp0 \
     v4l-utils \
     git \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install wheel
-RUN pip install --no-cache-dir --upgrade pip wheel setuptools
+# Upgrade pip using python -m to ensure we're using the right interpreter
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install packages in stages to better handle dependencies
-RUN pip install --no-cache-dir numpy
-RUN pip install --no-cache-dir flask Flask-Cors Flask-SocketIO
-RUN pip install --no-cache-dir scikit-build
-RUN pip install --no-cache-dir opencv-python-headless  # Use headless version instead
-RUN pip install --no-cache-dir sounddevice
-RUN pip install --no-cache-dir cvzone
-RUN pip install --no-cache-dir ultralytics
-RUN pip install --no-cache-dir deep-sort-realtime
+# Install packages with explicit python3 -m pip calls
+RUN python3 -m pip install --no-cache-dir numpy
+RUN python3 -m pip install --no-cache-dir flask Flask-Cors Flask-SocketIO
+RUN python3 -m pip install --no-cache-dir scikit-build
+RUN python3 -m pip install --no-cache-dir opencv-python-headless
+RUN python3 -m pip install --no-cache-dir sounddevice
+RUN python3 -m pip install --no-cache-dir cvzone
+RUN python3 -m pip install --no-cache-dir ultralytics
+RUN python3 -m pip install --no-cache-dir deep-sort-realtime
 
 COPY src/*.py /app/
 
-CMD ["python", "app.py"]
+CMD ["python3", "app.py"]
