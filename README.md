@@ -36,7 +36,7 @@ docker images
 Then run the docker, which creates a container using the following command:
 
 ```bash
-docker run mannvika/set:tag
+sudo docker run -it --rm --network host --device /dev/video0:/devideo0 --privileged -p 8000:8000 mannvika/set:test
 ```
 
 ## Commiting Changes
