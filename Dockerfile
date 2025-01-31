@@ -2,10 +2,6 @@ FROM nvidia/cuda:10.2-runtime-ubuntu18.04
 
 WORKDIR /app
 
-ENV PATH="/usr/local/cuda-10.2/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/local/cuda-10.2/lib64:${LD_LIBRARY_PATH}"
-RUN echo "$PATH" && echo "$LD_LIBRARY_PATH"
-
 COPY requirements.txt /app/
 
 RUN pip install --no-cache-dir -r requirements.txt 
