@@ -2,9 +2,6 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-ENV PATH="/usr/local/cuda-10.2/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/local/cuda-10.2/lib64:${LD_LIBRARY_PATH}"
-RUN echo "$PATH" && echo "$LD_LIBRARY_PATH"
 COPY requirements.txt /app/
 
 RUN pip install --no-cache-dir -r requirements.txt 
