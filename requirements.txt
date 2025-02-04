@@ -1,3 +1,4 @@
+torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
 numpy
 opencv-python
 flask
@@ -8,4 +9,3 @@ scikit-build
 cvzone
 ultralytics
 deep-sort-realtime
-torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
