@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM nvida/cuda:12.6.1-base-ubuntu24.04
 
 WORKDIR /app
 
