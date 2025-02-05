@@ -6,8 +6,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 
 # Install dependencies
-RUN apt-get update && apt-get install -y gnupg && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 16FAAD7AF99A65E2 && \
+RUN rm -f /etc/apt/sources.list.d/kitware.list && \
     apt-get update && apt-get install -y python3-pip python3-dev && \
     pip3 install --upgrade pip && \
     pip3 install --no-cache-dir -r /app/requirements.txt
