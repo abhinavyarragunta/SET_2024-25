@@ -1,5 +1,3 @@
-torch==1.10.0+nvjetson --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v46
-torchvision==0.11.1+nvjetson --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v46
 numpy
 opencv-python
 flask
