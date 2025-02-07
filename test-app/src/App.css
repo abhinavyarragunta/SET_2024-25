@@ -90,4 +90,25 @@
   to {
     transform: rotate(360deg);
   }
+}/* index.css */
+
+/* Button styling for video toggle button */
+.video-toggle {
+    background-color: #93cf40; /* Button's primary color */
+    color: black;               /* Button text color */
+    border: none;               /* Remove default border */
+    border-radius: 5px;        /* Rounded corners */
+    padding: 10px 20px;        /* Padding for the button */
+    cursor: pointer;            /* Pointer cursor on hover */
+    font-size: 16px;            /* Font size */
+    transition: background-color 0.3s ease; /* Smooth transition effect */
+    margin-bottom: 15px;        /* Space below the button */
+}
+
+.video-toggle:hover {
+    background-color: #76b84d; /* Slightly darker shade on hover */
+}
+
+.video-toggle.active {
+    background-color: #5b9c3c; /* Darker shade when activated */
 }

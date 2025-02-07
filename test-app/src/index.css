@@ -11,3 +11,45 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+/* index.css */
+
+.keyboard .key {
+    background-color: #0f6cb6; /* Primary color for the button */
+    color: black;               /* Text color */
+    border: black;               /* Remove default border */
+    border-radius: 5px;        /* Rounded corners */
+    padding: 15px 25px;        /* Padding inside the button */
+    margin: 5px;               /* Margin between buttons */
+    cursor: pointer;            /* Pointer cursor on hover */
+    font-size: 16px;            /* Font size */
+    transition: background-color 0.3s ease; /* Smooth transition effect */
+}
+
+.keyboard .key:hover {
+    background-color: #93cf40; /* green on hover */
+}
+
+.keyboard .key.active {
+    background-color: #93cf40; /* green when active */
+}
+
+.input-method-controls {
+    margin-bottom: 20px; /* Spacing below the controls */
+}
+
+.control-button {
+    background-color: #0f6cb6; /* Primary color for buttons */
+    color: black;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+
+.control-button.active {
+    background-color: #93cf40; /*green for active button */
+}

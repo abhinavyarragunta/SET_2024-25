@@ -13799,6 +13799,1401 @@
                 "injury_status": "Normal"
             },
             "confidence": 0.9474081993103027
+        },
+        {
+            "timestamp": "2025-02-06T20:20:09.645711",
+            "track_id": 1,
+            "bounding_box": [
+                215,
+                238,
+                466,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8570093512535095
+        },
+        {
+            "timestamp": "2025-02-06T20:20:10.314918",
+            "track_id": 1,
+            "bounding_box": [
+                213,
+                237,
+                467,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8548239469528198
+        },
+        {
+            "timestamp": "2025-02-06T20:20:10.967528",
+            "track_id": 1,
+            "bounding_box": [
+                215,
+                235,
+                468,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8679763674736023
+        },
+        {
+            "timestamp": "2025-02-06T20:20:11.652485",
+            "track_id": 1,
+            "bounding_box": [
+                200,
+                236,
+                450,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8798680901527405
+        },
+        {
+            "timestamp": "2025-02-06T20:20:12.351191",
+            "track_id": 1,
+            "bounding_box": [
+                182,
+                240,
+                422,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.882671058177948
+        },
+        {
+            "timestamp": "2025-02-06T20:20:13.019830",
+            "track_id": 1,
+            "bounding_box": [
+                181,
+                241,
+                422,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8730995655059814
+        },
+        {
+            "timestamp": "2025-02-06T20:20:13.683529",
+            "track_id": 1,
+            "bounding_box": [
+                204,
+                238,
+                453,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8586688041687012
+        },
+        {
+            "timestamp": "2025-02-06T20:20:14.370705",
+            "track_id": 1,
+            "bounding_box": [
+                239,
+                228,
+                501,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.847484827041626
+        },
+        {
+            "timestamp": "2025-02-06T20:20:15.037161",
+            "track_id": 1,
+            "bounding_box": [
+                227,
+                229,
+                485,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8665167093276978
+        },
+        {
+            "timestamp": "2025-02-06T20:20:15.690430",
+            "track_id": 1,
+            "bounding_box": [
+                190,
+                239,
+                435,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8852719068527222
+        },
+        {
+            "timestamp": "2025-02-06T20:20:16.401724",
+            "track_id": 1,
+            "bounding_box": [
+                181,
+                239,
+                425,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8809657692909241
+        },
+        {
+            "timestamp": "2025-02-06T20:20:17.054282",
+            "track_id": 1,
+            "bounding_box": [
+                217,
+                239,
+                472,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8426344394683838
+        },
+        {
+            "timestamp": "2025-02-06T20:20:17.734763",
+            "track_id": 1,
+            "bounding_box": [
+                231,
+                222,
+                537,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7269259691238403
+        },
+        {
+            "timestamp": "2025-02-06T20:20:18.413981",
+            "track_id": 1,
+            "bounding_box": [
+                242,
+                203,
+                547,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.4458860754966736
+        },
+        {
+            "timestamp": "2025-02-06T20:20:19.090938",
+            "track_id": 1,
+            "bounding_box": [
+                215,
+                193,
+                556,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.42110675573349
+        },
+        {
+            "timestamp": "2025-02-06T20:20:19.743744",
+            "track_id": 1,
+            "bounding_box": [
+                237,
+                205,
+                545,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.5104693174362183
+        },
+        {
+            "timestamp": "2025-02-06T20:20:20.446650",
+            "track_id": 1,
+            "bounding_box": [
+                239,
+                226,
+                520,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7599622011184692
+        },
+        {
+            "timestamp": "2025-02-06T20:20:21.082004",
+            "track_id": 1,
+            "bounding_box": [
+                214,
+                237,
+                468,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8617527484893799
+        },
+        {
+            "timestamp": "2025-02-06T20:20:21.759014",
+            "track_id": 1,
+            "bounding_box": [
+                190,
+                241,
+                436,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8803563117980957
+        },
+        {
+            "timestamp": "2025-02-06T20:20:22.470269",
+            "track_id": 1,
+            "bounding_box": [
+                173,
+                242,
+                414,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8892949223518372
+        },
+        {
+            "timestamp": "2025-02-06T20:20:23.127649",
+            "track_id": 1,
+            "bounding_box": [
+                181,
+                242,
+                424,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8838250637054443
+        },
+        {
+            "timestamp": "2025-02-06T20:20:23.780325",
+            "track_id": 1,
+            "bounding_box": [
+                189,
+                242,
+                434,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8786449432373047
+        },
+        {
+            "timestamp": "2025-02-06T20:20:24.446902",
+            "track_id": 1,
+            "bounding_box": [
+                192,
+                241,
+                438,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.885921835899353
+        },
+        {
+            "timestamp": "2025-02-06T20:20:25.105242",
+            "track_id": 1,
+            "bounding_box": [
+                194,
+                237,
+                440,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8740025162696838
+        },
+        {
+            "timestamp": "2025-02-06T20:20:25.769698",
+            "track_id": 1,
+            "bounding_box": [
+                163,
+                205,
+                432,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8878654837608337
+        },
+        {
+            "timestamp": "2025-02-06T20:20:26.456926",
+            "track_id": 1,
+            "bounding_box": [
+                6,
+                169,
+                514,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9199811220169067
+        },
+        {
+            "timestamp": "2025-02-06T20:20:27.145819",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                125,
+                575,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9154841899871826
+        },
+        {
+            "timestamp": "2025-02-06T20:20:27.791166",
+            "track_id": 1,
+            "bounding_box": [
+                1,
+                133,
+                580,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.911382794380188
+        },
+        {
+            "timestamp": "2025-02-06T20:20:28.468273",
+            "track_id": 1,
+            "bounding_box": [
+                1,
+                136,
+                576,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9152978658676147
+        },
+        {
+            "timestamp": "2025-02-06T20:20:29.196135",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                137,
+                579,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9130766987800598
+        },
+        {
+            "timestamp": "2025-02-06T20:20:29.855975",
+            "track_id": 1,
+            "bounding_box": [
+                7,
+                136,
+                577,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9034672975540161
+        },
+        {
+            "timestamp": "2025-02-06T20:20:30.518603",
+            "track_id": 1,
+            "bounding_box": [
+                4,
+                137,
+                578,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9115556478500366
+        },
+        {
+            "timestamp": "2025-02-06T20:20:31.219965",
+            "track_id": 1,
+            "bounding_box": [
+                3,
+                137,
+                582,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9076663851737976
+        },
+        {
+            "timestamp": "2025-02-06T20:20:31.908324",
+            "track_id": 1,
+            "bounding_box": [
+                3,
+                139,
+                577,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.910721480846405
+        },
+        {
+            "timestamp": "2025-02-06T20:20:32.630489",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                136,
+                577,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9142235517501831
+        },
+        {
+            "timestamp": "2025-02-06T20:20:33.364218",
+            "track_id": 1,
+            "bounding_box": [
+                0,
+                133,
+                579,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9179955124855042
+        },
+        {
+            "timestamp": "2025-02-06T20:20:34.288197",
+            "track_id": 1,
+            "bounding_box": [
+                3,
+                135,
+                583,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9085584282875061
+        },
+        {
+            "timestamp": "2025-02-06T20:20:34.957216",
+            "track_id": 1,
+            "bounding_box": [
+                5,
+                144,
+                581,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9067049026489258
+        },
+        {
+            "timestamp": "2025-02-06T20:20:35.646602",
+            "track_id": 1,
+            "bounding_box": [
+                1,
+                144,
+                581,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9187893271446228
+        },
+        {
+            "timestamp": "2025-02-06T20:20:36.310154",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                144,
+                585,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9146291613578796
+        },
+        {
+            "timestamp": "2025-02-06T20:20:37.013799",
+            "track_id": 1,
+            "bounding_box": [
+                0,
+                145,
+                583,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9009977579116821
+        },
+        {
+            "timestamp": "2025-02-06T20:20:37.704863",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                146,
+                582,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9155991673469543
+        },
+        {
+            "timestamp": "2025-02-06T20:20:38.347951",
+            "track_id": 1,
+            "bounding_box": [
+                1,
+                145,
+                583,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9147056341171265
+        },
+        {
+            "timestamp": "2025-02-06T20:20:39.056856",
+            "track_id": 1,
+            "bounding_box": [
+                1,
+                146,
+                573,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9118156433105469
+        },
+        {
+            "timestamp": "2025-02-06T20:20:39.733359",
+            "track_id": 1,
+            "bounding_box": [
+                1,
+                148,
+                576,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9175292253494263
+        },
+        {
+            "timestamp": "2025-02-06T20:20:40.440451",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                147,
+                579,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9079194068908691
+        },
+        {
+            "timestamp": "2025-02-06T20:20:41.117203",
+            "track_id": 1,
+            "bounding_box": [
+                3,
+                148,
+                575,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9075396060943604
+        },
+        {
+            "timestamp": "2025-02-06T20:20:41.756646",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                153,
+                579,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.913936197757721
+        },
+        {
+            "timestamp": "2025-02-06T20:20:42.383394",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                133,
+                568,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9214630722999573
+        },
+        {
+            "timestamp": "2025-02-06T20:20:43.055550",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                150,
+                574,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9107943177223206
+        },
+        {
+            "timestamp": "2025-02-06T20:20:43.732623",
+            "track_id": 1,
+            "bounding_box": [
+                2,
+                130,
+                572,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.9153398275375366
+        },
+        {
+            "timestamp": "2025-02-06T20:20:44.392078",
+            "track_id": 1,
+            "bounding_box": [
+                45,
+                146,
+                597,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8987573385238647
+        },
+        {
+            "timestamp": "2025-02-06T20:20:45.039467",
+            "track_id": 1,
+            "bounding_box": [
+                69,
+                145,
+                604,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8951365351676941
+        },
+        {
+            "timestamp": "2025-02-06T20:20:45.716143",
+            "track_id": 1,
+            "bounding_box": [
+                61,
+                146,
+                600,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8916477560997009
+        },
+        {
+            "timestamp": "2025-02-06T20:20:46.435034",
+            "track_id": 1,
+            "bounding_box": [
+                64,
+                148,
+                622,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8976023197174072
+        },
+        {
+            "timestamp": "2025-02-06T20:20:47.183712",
+            "track_id": 1,
+            "bounding_box": [
+                30,
+                148,
+                621,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8761329650878906
+        },
+        {
+            "timestamp": "2025-02-06T20:25:37.361034",
+            "track_id": 1,
+            "bounding_box": [
+                93,
+                148,
+                558,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7807679176330566
+        },
+        {
+            "timestamp": "2025-02-06T20:25:38.118019",
+            "track_id": 1,
+            "bounding_box": [
+                83,
+                148,
+                543,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7902947664260864
+        },
+        {
+            "timestamp": "2025-02-06T20:25:38.945580",
+            "track_id": 1,
+            "bounding_box": [
+                74,
+                148,
+                542,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7994205355644226
+        },
+        {
+            "timestamp": "2025-02-06T20:25:39.657107",
+            "track_id": 1,
+            "bounding_box": [
+                124,
+                143,
+                531,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8547223806381226
+        },
+        {
+            "timestamp": "2025-02-06T20:25:40.438838",
+            "track_id": 1,
+            "bounding_box": [
+                122,
+                130,
+                541,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8817942142486572
+        },
+        {
+            "timestamp": "2025-02-06T20:25:41.206060",
+            "track_id": 1,
+            "bounding_box": [
+                125,
+                130,
+                543,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8800292611122131
+        },
+        {
+            "timestamp": "2025-02-06T20:25:41.961982",
+            "track_id": 1,
+            "bounding_box": [
+                122,
+                131,
+                544,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8675541877746582
+        },
+        {
+            "timestamp": "2025-02-06T20:25:42.804208",
+            "track_id": 1,
+            "bounding_box": [
+                114,
+                116,
+                531,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8925301432609558
+        },
+        {
+            "timestamp": "2025-02-06T20:25:43.559965",
+            "track_id": 1,
+            "bounding_box": [
+                179,
+                200,
+                555,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8324335217475891
+        },
+        {
+            "timestamp": "2025-02-06T20:25:44.312883",
+            "track_id": 1,
+            "bounding_box": [
+                258,
+                249,
+                567,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7710314393043518
+        },
+        {
+            "timestamp": "2025-02-06T20:25:45.042837",
+            "track_id": 1,
+            "bounding_box": [
+                257,
+                268,
+                562,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8249632120132446
+        },
+        {
+            "timestamp": "2025-02-06T20:25:45.797583",
+            "track_id": 1,
+            "bounding_box": [
+                248,
+                272,
+                525,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8037534952163696
+        },
+        {
+            "timestamp": "2025-02-06T20:25:46.538568",
+            "track_id": 1,
+            "bounding_box": [
+                253,
+                271,
+                551,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7919298410415649
+        },
+        {
+            "timestamp": "2025-02-06T20:25:47.279540",
+            "track_id": 1,
+            "bounding_box": [
+                275,
+                250,
+                624,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7629241943359375
+        },
+        {
+            "timestamp": "2025-02-06T20:25:48.002948",
+            "track_id": 1,
+            "bounding_box": [
+                265,
+                257,
+                604,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8295803666114807
+        },
+        {
+            "timestamp": "2025-02-06T20:25:48.708688",
+            "track_id": 1,
+            "bounding_box": [
+                251,
+                270,
+                547,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8412901759147644
+        },
+        {
+            "timestamp": "2025-02-06T20:25:49.536632",
+            "track_id": 1,
+            "bounding_box": [
+                271,
+                263,
+                612,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7756858468055725
+        },
+        {
+            "timestamp": "2025-02-06T20:25:50.278277",
+            "track_id": 1,
+            "bounding_box": [
+                274,
+                262,
+                600,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8248580694198608
+        },
+        {
+            "timestamp": "2025-02-06T20:25:51.020328",
+            "track_id": 1,
+            "bounding_box": [
+                260,
+                276,
+                563,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7471330165863037
+        },
+        {
+            "timestamp": "2025-02-06T20:25:51.779511",
+            "track_id": 1,
+            "bounding_box": [
+                263,
+                278,
+                559,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.721748948097229
+        },
+        {
+            "timestamp": "2025-02-06T20:25:52.488410",
+            "track_id": 1,
+            "bounding_box": [
+                261,
+                278,
+                559,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7811056971549988
+        },
+        {
+            "timestamp": "2025-02-06T20:25:53.222123",
+            "track_id": 1,
+            "bounding_box": [
+                262,
+                279,
+                559,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7500892281532288
+        },
+        {
+            "timestamp": "2025-02-06T20:25:53.988807",
+            "track_id": 1,
+            "bounding_box": [
+                262,
+                279,
+                559,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7957168221473694
+        },
+        {
+            "timestamp": "2025-02-06T20:25:54.702365",
+            "track_id": 1,
+            "bounding_box": [
+                263,
+                279,
+                558,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.7743456363677979
+        },
+        {
+            "timestamp": "2025-02-06T20:25:55.438988",
+            "track_id": 1,
+            "bounding_box": [
+                262,
+                278,
+                558,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.778403103351593
+        },
+        {
+            "timestamp": "2025-02-06T20:25:56.254367",
+            "track_id": 1,
+            "bounding_box": [
+                265,
+                279,
+                557,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.787397027015686
+        },
+        {
+            "timestamp": "2025-02-06T20:25:57.013164",
+            "track_id": 1,
+            "bounding_box": [
+                264,
+                279,
+                558,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8083517551422119
+        },
+        {
+            "timestamp": "2025-02-06T20:25:57.800356",
+            "track_id": 1,
+            "bounding_box": [
+                260,
+                280,
+                555,
+                479
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8082725405693054
+        },
+        {
+            "timestamp": "2025-02-06T20:25:58.601306",
+            "track_id": 1,
+            "bounding_box": [
+                268,
+                277,
+                578,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.781135082244873
+        },
+        {
+            "timestamp": "2025-02-06T20:25:59.396142",
+            "track_id": 1,
+            "bounding_box": [
+                277,
+                272,
+                601,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.6218899488449097
+        },
+        {
+            "timestamp": "2025-02-06T20:26:00.211418",
+            "track_id": 1,
+            "bounding_box": [
+                247,
+                281,
+                550,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.801632821559906
+        },
+        {
+            "timestamp": "2025-02-06T20:26:00.967758",
+            "track_id": 1,
+            "bounding_box": [
+                235,
+                282,
+                516,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.816243588924408
+        },
+        {
+            "timestamp": "2025-02-06T20:26:01.715592",
+            "track_id": 1,
+            "bounding_box": [
+                217,
+                234,
+                553,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8562626838684082
+        },
+        {
+            "timestamp": "2025-02-06T20:26:02.452640",
+            "track_id": 1,
+            "bounding_box": [
+                104,
+                176,
+                640,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8930530548095703
+        },
+        {
+            "timestamp": "2025-02-06T20:26:03.243315",
+            "track_id": 1,
+            "bounding_box": [
+                70,
+                160,
+                639,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8979870676994324
+        },
+        {
+            "timestamp": "2025-02-06T20:26:04.032485",
+            "track_id": 1,
+            "bounding_box": [
+                104,
+                167,
+                640,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8910931944847107
+        },
+        {
+            "timestamp": "2025-02-06T20:26:04.883817",
+            "track_id": 1,
+            "bounding_box": [
+                107,
+                167,
+                640,
+                480
+            ],
+            "statuses": {
+                "fall_status": "Normal",
+                "injury_status": "Normal"
+            },
+            "confidence": 0.8966885209083557
         }
     ],
     "2": [
