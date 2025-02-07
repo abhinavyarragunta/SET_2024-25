@@ -8,12 +8,12 @@ COPY requirements.txt /app/
 # Install dependencie
 # Remove Kitware repository if it exists
 RUN rm -f /etc/apt/sources.list.d/kitware.list && \
-    apt-get update && apt-get install -y gnupg2 curl && \
+    apt-key del 16FAAD7AF99A65E2 || true && \
+    apt-get update --allow-releaseinfo-change && \
+    apt-get install -y gnupg2 curl && \
     apt-get install -y python3-pip python3-dev && \
     pip3 install --upgrade pip && \
     pip3 install --no-cache-dir -r /app/requirements.txt
-
-
 
 
 # Copy application code
