@@ -4,7 +4,6 @@ flask
 Flask-Cors
 Flask-SocketIO
 sounddevice
-scikit-build
 cvzone
 ultralytics
 deep-sort-realtime
