@@ -2,15 +2,25 @@ import serial
 import time
 
 def main():
-    arduino = serial.Serial(port='COM3', baudrate=9600, timeout=0.1)
-    # Baudrate of data output, not LiDAR
+    arduino = serial.Serial(port='COM4', baudrate=9600, timeout=0.1)
+    time.sleep(1)  # reset time
 
     while True:
-        # bytes = read(9)
+        data = arduino.readline().decode('utf-8').strip()
+        if data:
+            try:
+                parts = data.split('\t')
 
-        data = arduino.readline()
+                distance_str = parts[0].split('=')[1].strip()
+                strength_str = parts[1].split('=')[1].strip()
+
+                distance = int(distance_str)
+                strength = int(strength_str)
+
+                print(f"Distance: {distance} cm, Strength: {strength}")
+            except (IndexError, ValueError) as e:
+                print(f"Error parsing data: {e}")
         time.sleep(0.05)
-        print(data)
 
 if __name__ == "__main__":
     main()
