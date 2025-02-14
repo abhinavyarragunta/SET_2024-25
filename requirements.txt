@@ -1,9 +1,7 @@
 torch==1.10.0
 numpy
-opencv-python
 flask
 Flask-Cors
 Flask-SocketIO
 sounddevice
-cvzone
 deep-sort-realtime
