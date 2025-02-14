@@ -3,7 +3,8 @@ FROM nvcr.io/nvidia/l4t-pytorch:r32.7.1-pth1.10-py3
 WORKDIR /app
 
 # Install Python 3.8 safely
-RUN apt-get update --allow-releaseinfo-change && \
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 16FAAD7AF99A65E2 && \
+    apt-get update --allow-releaseinfo-change && \
     apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
