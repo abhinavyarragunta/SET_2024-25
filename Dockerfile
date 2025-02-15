@@ -1,16 +1,12 @@
-FROM nvcr.io/nvidia/l4t-pytorch:r32.7.1-pth1.10-py3
+FROM nvcr.io/nvidia/l4t-pytorch:r35.2.1-pth2.0-py3
 
 WORKDIR /app
 
-# Install Python 3.8 safely
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 16FAAD7AF99A65E2
-
-# Upgrade pip and install dependencies
+# Copy requirements.txt and install dependencies
 COPY requirements.txt /app/
-RUN pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir -r /app/requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy Python files
 COPY src/*.py /app/
 
 CMD ["python3", "app.py"]
