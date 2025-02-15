@@ -4,4 +4,5 @@ flask
 Flask-Cors
 Flask-SocketIO
 sounddevice
+ultralytics
 deep-sort-realtime
